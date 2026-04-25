@@ -48,7 +48,7 @@ export class ObstacleSpawner extends Component {
 
     /** 通道最小间隙（像素） */
     @property({ tooltip: '通道最小间隙' })
-    public minGapWidth: number = 160;
+    public minGapWidth: number = 180;
 
     /** 通道最大间隙（像素） */
     @property({ tooltip: '通道最大间隙' })
@@ -250,6 +250,34 @@ export class ObstacleSpawner extends Component {
         gfx.moveTo(w / 2, -h / 2);
         gfx.lineTo(w / 2, h / 2);
         gfx.stroke();
+    }
+
+    /**
+     * 普通障碍物缺口范围。
+     * 前期保持更宽，后期才以较低概率出现相对较窄的通道。
+     */
+    private getNormalGapRange(): { min: number, max: number } {
+        const baseMin = this.minGapWidth;
+        const baseMax = Math.max(baseMin + 20, this.maxGapWidth);
+
+        if (this._currentScore < 12) {
+            return { min: baseMin + 40, max: baseMax + 30 };
+        }
+
+        if (this._currentScore < 24) {
+            return { min: baseMin + 20, max: baseMax + 15 };
+        }
+
+        if (this._currentScore < 36) {
+            return { min: baseMin + 10, max: baseMax + 5 };
+        }
+
+        // 后期仍以中等偏宽为主，仅低概率生成相对较窄缺口。
+        if (Math.random() < 0.15) {
+            return { min: baseMin, max: baseMin + 24 };
+        }
+
+        return { min: baseMin + 8, max: baseMax };
     }
 
     public startSpawning() {
@@ -518,9 +546,11 @@ export class ObstacleSpawner extends Component {
             const centerX = (playableLeft + playableRight) / 2;
             this.spawnObstacle(centerX, spawnY, playableWidth, this.rowHeight, 'charged', groupId, rowCharge);
         } else {
+            const normalGapRange = this.getNormalGapRange();
+
             // 上一次是带磁极行，这次是普通行 → 增大缺口给玩家更多移动时间
-            const gapMin = this._lastRowCharged ? this.minGapWidth + 60 : this.minGapWidth;
-            const gapMax = this._lastRowCharged ? this.maxGapWidth + 60 : this.maxGapWidth;
+            const gapMin = this._lastRowCharged ? normalGapRange.min + 60 : normalGapRange.min;
+            const gapMax = this._lastRowCharged ? normalGapRange.max + 60 : normalGapRange.max;
             gapWidth = gapMin + Math.random() * (gapMax - gapMin);
 
             // 普通障碍物：中间留通道
@@ -1028,6 +1058,13 @@ export class ObstacleSpawner extends Component {
      */
     public getCurrentSpeed(): number {
         return this._currentSpeed * this._dashSpeedMult;
+    }
+
+    /**
+     * 获取当前基础难度速度倍率（不包含冲刺倍率）
+     */
+    public getDifficultySpeedScale(): number {
+        return this.moveSpeed > 0 ? this._currentSpeed / this.moveSpeed : 1;
     }
 
     /**

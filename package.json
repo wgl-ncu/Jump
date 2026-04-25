@@ -3,5 +3,8 @@
   "uuid": "48a5fa47-14f2-4928-baa8-1b56c231d0e0",
   "creator": {
     "version": "3.8.8"
+  },
+  "devDependencies": {
+    "exceljs": "^4.4.0"
   }
 }

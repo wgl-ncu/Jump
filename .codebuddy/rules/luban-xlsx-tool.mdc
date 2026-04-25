@@ -1,0 +1,160 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-04-25T03:57:18.614Z
+provider: 
+---
+
+# Luban Excel 配置表管理工具
+
+## 概述
+
+项目使用 Luban 作为打表工具。定义文件用 XML 格式（`DataTables/Defines/*.xml`），数据文件用 xlsx 格式（`DataTables/Datas/*.xlsx`）。Agent 应通过 `xlsx_tool.js` CLI 工具操作配置表，**不要直接编辑 xlsx 或 xml 文件**。
+
+## 工具路径
+
+```
+d:\Work\CocosProjection\Jump\DataTables\xlsx_tool.js
+```
+
+## 命令参考
+
+### 列出所有表
+```bash
+node <tool_path> list
+```
+返回：`{ ok, tables: [{ name, value, index, input, comment, sourceFile, recordCount }] }`
+
+### 查看表结构
+```bash
+node <tool_path> schema <表名>
+```
+返回：`{ ok, schema: { tableName, value, index, input, comment, fields: [{ name, type, comment }] } }`
+
+### 查询记录
+```bash
+node <tool_path> select <表名>          # 全部记录
+node <tool_path> select <表名> <id>     # 按主键查询
+```
+返回：`{ ok, count, fields, records: [...] }`
+
+### 插入记录
+```bash
+node <tool_path> insert <表名> '<JSON>'
+```
+示例：
+```bash
+node <tool_path> insert TbText '{"Id":3001,"ZhCn":"设置","En":"Settings","EnumName":"Settings"}'
+```
+
+### 更新记录
+```bash
+node <tool_path> update <表名> <id> '<JSON>'
+```
+示例：
+```bash
+node <tool_path> update TbText 3001 '{"ZhCn":"选项设置","EnumName":"OptionSettings"}'
+```
+注意：不允许修改主键字段。
+
+### 删除记录
+```bash
+node <tool_path> delete <表名> <id>
+```
+
+### 添加字段（列）
+```bash
+node <tool_path> add-column <表名> <字段名> <类型> [注释]
+```
+示例：
+```bash
+node <tool_path> add-column TbText Ja string "日文文本"
+```
+此命令会同时更新 XML 定义和数据 xlsx。
+
+**不导出字段**：如果字段仅用于开发时（如枚举名称），不需要导出到客户端二进制，需手动在 XML 中给 `<var>` 添加 `group="!c"` 属性：
+```xml
+<var name="EnumName" type="string" comment="枚举名称" group="!c"/>
+```
+
+### 新增表
+```bash
+node <tool_path> add-table <表名> '<字段JSON数组>' [主键字段] [数据文件名] [注释]
+```
+- 表名通常以 `Tb` 开头（如 TbItem）
+- 字段JSON数组格式：`[{"name":"Id","type":"int","comment":"ID"}, ...]`
+- 主键字段默认为第一个字段
+- 数据文件名默认为表名首字母小写 + .xlsx
+- 会自动创建 XML 定义文件和数据 xlsx
+
+示例：
+```bash
+node <tool_path> add-table TbItem '[{"name":"Id","type":"int","comment":"物品ID"},{"name":"Name","type":"string","comment":"名称"}]'
+```
+
+### 删除表
+```bash
+node <tool_path> remove-table <表名>
+```
+此命令会删除对应的 XML 定义文件和数据 xlsx。
+
+## 支持的字段类型
+
+- `int` — 整数
+- `long` — 长整数
+- `float` — 浮点数
+- `double` — 双精度浮点数
+- `bool` — 布尔值
+- `string` — 字符串
+
+## 文本枚举生成
+
+TbText 表的 `EnumName` 列用于定义文本 ID 枚举名称。打表时需运行枚举生成脚本：
+
+```bash
+node DataTables/gen_text_enum.js
+```
+
+此脚本会：
+1. 读取 `DataTables/Datas/text.xlsx` 中的 `Id`、`EnumName`、`ZhCn` 列
+2. 跳过 `EnumName` 为空的行
+3. 生成 `assets/Scripts/Data/TextId.ts`，包含 `TextId` 枚举，中文文本作为注释
+
+生成的枚举示例：
+```typescript
+export enum TextId {
+    /** 确认 */
+    Confirm = 1,
+    /** 得分 */
+    Score = 1001,
+}
+```
+
+业务代码应使用 `TextId` 枚举代替魔法数字：
+```typescript
+// 推荐
+TextManager.getInstance().getText(TextId.Score);
+// 不推荐
+TextManager.getInstance().getText(1001);
+```
+
+## 操作流程
+
+1. 修改前先 `schema` 或 `select` 确认当前状态
+2. 执行增删改操作
+3. 操作后 `select` 验证结果
+4. 修改完成后按顺序执行：
+   - 生成文本枚举：`node DataTables/gen_text_enum.js`
+   - 运行打表：`dotnet Tools/Luban/Luban.dll -t client -c typescript-bin -d bin --conf DataTables/luban.conf -x outputCodeDir=assets/Scripts/Data/schema -x outputDataDir=assets/resources/LubanData -x bin.fileExt=bin`
+
+## 注意事项
+
+- 所有输出为 JSON 格式，`ok` 字段标识成功与否
+- 失败时查看 `error` 字段
+- 插入时主键不能重复
+- 更新时不能修改主键
+- 每个表对应一个 XML 定义文件（`Defines/模块名.xml`）
+- PowerShell 中 JSON 参数需使用双引号转义：`"{\"Key\":\"Value\"}"`
+- 修改后必须打表并生成枚举才能在游戏中生效
+- TbText 的 `EnumName` 列标记了 `group="!c"`，不会导出到客户端二进制

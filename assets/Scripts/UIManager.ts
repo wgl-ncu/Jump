@@ -1,5 +1,7 @@
 import { _decorator, Component, Node, Label, Color, UITransform, Size, Overflow, HorizontalTextAlignment } from 'cc';
 import { MagneticPole } from './Player';
+import { TextManager } from './Data/TextManager';
+import { TextId } from './Data/TextId';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIManager')
@@ -115,10 +117,10 @@ export class UIManager extends Component {
 
         if (this._fieldStatusLabel) {
             if (reversalFactor > 0.5) {
-                this._fieldStatusLabel.string = '⚡磁场反转';
+                this._fieldStatusLabel.string = TextManager.getInstance().getText(TextId.FieldReverse);
                 this._fieldStatusLabel.color = new Color(200, 80, 255, Math.floor(255 * reversalFactor));
             } else if (reversalFactor > 0.05) {
-                this._fieldStatusLabel.string = '磁场切换中';
+                this._fieldStatusLabel.string = TextManager.getInstance().getText(TextId.FieldSwitching);
                 this._fieldStatusLabel.color = new Color(180, 120, 220, Math.floor(180 * reversalFactor));
             } else {
                 this._fieldStatusLabel.string = '';
@@ -240,7 +242,7 @@ export class UIManager extends Component {
         if (this._invincibleLabel) {
             if (active && timeLeft > 0) {
                 const seconds = Math.ceil(timeLeft);
-                this._invincibleLabel.string = `🛡 无敌 ${seconds}s`;
+                this._invincibleLabel.string = TextManager.formatText(TextId.Invincible, seconds);
                 // 快结束时闪烁
                 if (timeLeft <= 3) {
                     const flash = Math.floor(timeLeft * 4) % 2 === 0;
@@ -265,7 +267,7 @@ export class UIManager extends Component {
         if (this._dashLabel) {
             if (active && timeLeft > 0) {
                 const seconds = Math.ceil(timeLeft);
-                this._dashLabel.string = `⚡ 冲刺 ${seconds}s`;
+                this._dashLabel.string = TextManager.formatText(TextId.Dash, seconds);
                 // 快结束时闪烁
                 if (timeLeft <= 2) {
                     const flash = Math.floor(timeLeft * 4) % 2 === 0;
@@ -290,7 +292,7 @@ export class UIManager extends Component {
         if (this._bonusRoomLabel) {
             if (active && timeLeft > 0) {
                 const seconds = Math.ceil(timeLeft);
-                this._bonusRoomLabel.string = `✨ 神秘奖励 ${seconds}s ✨`;
+                this._bonusRoomLabel.string = TextManager.formatText(TextId.BonusRoom, seconds);
                 // 快结束时闪烁
                 if (timeLeft <= 3) {
                     const flash = Math.floor(timeLeft * 4) % 2 === 0;

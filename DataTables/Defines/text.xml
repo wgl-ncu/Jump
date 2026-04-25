@@ -1,0 +1,13 @@
+<module name="text">
+
+    <bean name="Text">
+        <var name="Id" type="int" comment="ID"/>
+        <var name="ZhCn" type="string" comment="中文文本"/>
+        <var name="En" type="string" comment="英文文本"/>
+    
+        <var name="EnumName" type="string" comment="枚举名称" group="!c"/>
+    </bean>
+
+    <table name="TbText" value="Text" input="text.xlsx" comment="文本表"/>
+
+</module>

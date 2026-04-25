@@ -7,7 +7,6 @@ import { DashItem } from './DashItem';
 import { BonusPortalItem } from './BonusPortalItem';
 import { ObstacleSpawner } from './ObstacleSpawner';
 import { UIManager } from './UIManager';
-import { MagneticField } from './MagneticField';
 import { SceneBuilder } from './SceneBuilder';
 import { MagneticZoneManager } from './MagneticZoneManager';
 const { ccclass, property } = _decorator;
@@ -42,8 +41,6 @@ export class GameManager extends Component {
     @property({ type: UIManager, tooltip: 'UI管理器' })
     public uiManager: UIManager | null = null;
 
-    @property({ type: MagneticField, tooltip: '磁场视觉' })
-    public magneticField: MagneticField | null = null;
 
     @property({ type: MagneticZoneManager, tooltip: '磁场区域管理器' })
     public magneticZoneManager: MagneticZoneManager | null = null;
@@ -120,7 +117,6 @@ export class GameManager extends Component {
             if (!this.player) this.player = this._sceneBuilder.getPlayer();
             if (!this.obstacleSpawner) this.obstacleSpawner = this._sceneBuilder.getObstacleSpawner();
             if (!this.uiManager) this.uiManager = this._sceneBuilder.getUIManager();
-            if (!this.magneticField) this.magneticField = this._sceneBuilder.getMagneticField();
             if (!this.magneticZoneManager) this.magneticZoneManager = this._sceneBuilder.getMagneticZoneManager();
         }
 
@@ -129,10 +125,6 @@ export class GameManager extends Component {
             this.player.onPoleChanged = (pole: MagneticPole) => {
                 this.uiManager?.updatePoleIndicator(pole);
             };
-        }
-
-        if (this.magneticField) {
-            this.magneticField.init(this.rightBound - this.leftBound, 0);
         }
 
         if (this.magneticZoneManager) {
@@ -286,6 +278,12 @@ export class GameManager extends Component {
             this.obstacleSpawner.setScore(this._score);
         }
 
+        // 障碍物难度上涨后，同步提升玩家横向飞行能力。
+        if (this.player) {
+            const speedScale = this.obstacleSpawner?.getDifficultySpeedScale() || 1;
+            this.player.setMovementSpeedScale(speedScale);
+        }
+
         // 同步分数和速度到磁场区域管理器
         if (this.magneticZoneManager) {
             this.magneticZoneManager.setScore(this._score);
@@ -314,9 +312,6 @@ export class GameManager extends Component {
         if (!this.magneticZoneManager) return;
 
         const factor = this.magneticZoneManager.reversalFactor;
-
-        // 更新磁场视觉
-        this.magneticField?.setReversalFactor(factor);
 
         // 更新UI磁场状态
         this.uiManager?.updateFieldStatus(factor);
@@ -650,6 +645,6 @@ export class GameManager extends Component {
     public setPlayer(player: Player) { this.player = player; }
     public setObstacleSpawner(spawner: ObstacleSpawner) { this.obstacleSpawner = spawner; }
     public setUIManager(ui: UIManager) { this.uiManager = ui; }
-    public setMagneticField(field: MagneticField) { this.magneticField = field; }
+
     public setMagneticZoneManager(manager: MagneticZoneManager) { this.magneticZoneManager = manager; }
 }

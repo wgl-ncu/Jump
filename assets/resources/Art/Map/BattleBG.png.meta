@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "9b57d4af-6cae-4365-bb14-ca3c871fb4e7",
+  "uuid": "f9cc27ec-e4fc-466c-8328-18f431487333",
   "files": [
     ".json",
     ".png"
@@ -10,14 +10,14 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "9b57d4af-6cae-4365-bb14-ca3c871fb4e7@6c48a",
-      "displayName": "BG1",
+      "uuid": "f9cc27ec-e4fc-466c-8328-18f431487333@6c48a",
+      "displayName": "BattleBG",
       "id": "6c48a",
       "name": "texture",
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
-        "imageUuidOrDatabaseUri": "9b57d4af-6cae-4365-bb14-ca3c871fb4e7",
+        "imageUuidOrDatabaseUri": "f9cc27ec-e4fc-466c-8328-18f431487333",
         "isUuid": true,
         "visible": false,
         "minfilter": "linear",
@@ -34,8 +34,8 @@
     },
     "f9941": {
       "importer": "sprite-frame",
-      "uuid": "9b57d4af-6cae-4365-bb14-ca3c871fb4e7@f9941",
-      "displayName": "BG1",
+      "uuid": "f9cc27ec-e4fc-466c-8328-18f431487333@f9941",
+      "displayName": "BattleBG",
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
@@ -113,7 +113,7 @@
           ]
         },
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "9b57d4af-6cae-4365-bb14-ca3c871fb4e7@6c48a",
+        "imageUuidOrDatabaseUri": "f9cc27ec-e4fc-466c-8328-18f431487333@6c48a",
         "atlasUuid": "",
         "trimType": "auto"
       },
@@ -128,8 +128,8 @@
   "userData": {
     "type": "sprite-frame",
     "fixAlphaTransparencyArtifacts": false,
-    "hasAlpha": false,
-    "redirect": "9b57d4af-6cae-4365-bb14-ca3c871fb4e7@6c48a",
+    "hasAlpha": true,
+    "redirect": "f9cc27ec-e4fc-466c-8328-18f431487333@6c48a",
     "compressSettings": {
       "useCompressTexture": true,
       "presetId": "75qu4N8wdKha8HAQovRijO"

@@ -1,10 +1,12 @@
-import { _decorator, Component, Node, UITransform, Size, Sprite, Color, Label, Graphics, Canvas, Button, Overflow, HorizontalTextAlignment, VerticalTextAlignment, resources, Prefab, instantiate } from 'cc';
+import { _decorator, Component, Node, UITransform, Size, Sprite, SpriteFrame, Color, Label, Graphics, Canvas, Button, Overflow, HorizontalTextAlignment, VerticalTextAlignment, resources, Prefab, instantiate } from 'cc';
 import { Player, MagneticPole } from './Player';
 import { ObstacleSpawner } from './ObstacleSpawner';
 import { UIManager } from './UIManager';
 import { MagneticField } from './MagneticField';
 import { ScrollingBackground } from './ScrollingBackground';
 import { MagneticZoneManager } from './MagneticZoneManager';
+import { TextManager } from './Data/TextManager';
+import { TextId } from './Data/TextId';
 const { ccclass } = _decorator;
 
 /**
@@ -20,6 +22,8 @@ const { ccclass } = _decorator;
  */
 @ccclass('SceneBuilder')
 export class SceneBuilder extends Component {
+
+    private static readonly BATTLE_BG_PATH = 'Art/Map/BattleBG/spriteFrame';
 
     private readonly DESIGN_HEIGHT = 1280;
     private readonly DESIGN_WIDTH = 720;
@@ -62,12 +66,17 @@ export class SceneBuilder extends Component {
     }
 
     private buildScene() {
-        const canvas = this.node.getComponent(Canvas);
-        if (!canvas) {
-            this.node.addComponent(Canvas);
-            const uiTransform = this.node.getComponent(UITransform) || this.node.addComponent(UITransform);
-            uiTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
+        const ownCanvas = this.node.getComponent(Canvas);
+        const parentCanvas = this.node.parent?.getComponent(Canvas) || null;
+
+        // 若已经挂在场景 Canvas 下，则直接复用父级坐标系，避免再创建一个偏移到左下角的 Canvas。
+        if (!ownCanvas && !parentCanvas) {
+            const canvas = this.node.addComponent(Canvas);
+            canvas.alignCanvasWithScreen = true;
         }
+
+        const uiTransform = this.node.getComponent(UITransform) || this.node.addComponent(UITransform);
+        uiTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
 
         this.createBackgroundLayer();
         this.createMagneticFieldLayer();
@@ -85,69 +94,41 @@ export class SceneBuilder extends Component {
         const uiTransform = bgLayer.addComponent(UITransform);
         uiTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
 
-        // 深色背景
+        // 默认深色背景；BattleBG 加载成功后会替换为底图。
         const bgSprite = bgLayer.addComponent(Sprite);
         bgSprite.sizeMode = Sprite.SizeMode.CUSTOM;
         bgSprite.type = Sprite.Type.SIMPLE;
         bgSprite.color = new Color(15, 15, 30, 255);
+
+        resources.load(SceneBuilder.BATTLE_BG_PATH, SpriteFrame, (err, spriteFrame) => {
+            if (err) {
+                console.warn('加载 BattleBG 失败，继续使用纯色背景:', err);
+                return;
+            }
+
+            if (!bgSprite.isValid) {
+                return;
+            }
+
+            bgSprite.spriteFrame = spriteFrame;
+            bgSprite.color = Color.WHITE;
+        });
 
         // 滚动背景（向上滚动的线条效果）
         this._scrollingBg = bgLayer.addComponent(ScrollingBackground);
     }
 
     /**
-     * 磁场层 - 左N极右S极区域
+     * 磁场层 - 逻辑组件
      */
     private createMagneticFieldLayer() {
         const fieldLayer = this.createNode('MagneticFieldLayer', this.node);
         const uiTransform = fieldLayer.addComponent(UITransform);
         uiTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
 
-        // N极区域（左侧）
-        const northZone = this.createNode('NorthZone', fieldLayer);
-        const nUT = northZone.addComponent(UITransform);
-        const northWidth = this.DESIGN_WIDTH / 2;
-        nUT.setContentSize(new Size(northWidth, this.DESIGN_HEIGHT));
-        northZone.setPosition(-northWidth / 2, 0, 0);
-        const nSprite = northZone.addComponent(Sprite);
-        nSprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        nSprite.type = Sprite.Type.SIMPLE;
-        nSprite.color = new Color(255, 40, 40, 12);
-
-        // N极标签
-        const nLabel = this.createLabel('N', northZone, 36, new Color(255, 80, 80, 60));
-        nLabel.node.setPosition(0, -500, 0);
-
-        // S极区域（右侧）
-        const southZone = this.createNode('SouthZone', fieldLayer);
-        const sUT = southZone.addComponent(UITransform);
-        const southWidth = this.DESIGN_WIDTH / 2;
-        sUT.setContentSize(new Size(southWidth, this.DESIGN_HEIGHT));
-        southZone.setPosition(southWidth / 2, 0, 0);
-        const sSprite = southZone.addComponent(Sprite);
-        sSprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        sSprite.type = Sprite.Type.SIMPLE;
-        sSprite.color = new Color(40, 40, 255, 12);
-
-        // S极标签
-        const sLabel = this.createLabel('S', southZone, 36, new Color(80, 80, 255, 60));
-        sLabel.node.setPosition(0, -500, 0);
-
-        // 中线
-        const midLine = this.createNode('MidLine', fieldLayer);
-        midLine.addComponent(UITransform).setContentSize(new Size(2, this.DESIGN_HEIGHT));
-        const midGfx = midLine.addComponent(Graphics);
-        midGfx.strokeColor = new Color(100, 100, 100, 40);
-        midGfx.lineWidth = 1;
-        midGfx.moveTo(0, -this.DESIGN_HEIGHT / 2);
-        midGfx.lineTo(0, this.DESIGN_HEIGHT / 2);
-        midGfx.stroke();
-
-        // 磁场组件
+        // 磁场逻辑组件
         const magneticField = fieldLayer.addComponent(MagneticField);
-        magneticField.northZone = northZone;
-        magneticField.southZone = southZone;
-        magneticField.init(this.RIGHT_BOUND - this.LEFT_BOUND, 0);
+        magneticField.init(0);
 
         this._magneticField = magneticField;
     }
@@ -321,7 +302,7 @@ export class SceneBuilder extends Component {
         const tipNode = this.createNode('TipLabel', uiLayer);
         tipNode.setPosition(0, -this.DESIGN_HEIGHT / 2 + 60, 0);
         const tipLabel = tipNode.addComponent(Label);
-        tipLabel.string = '点击屏幕切换磁极';
+        tipLabel.string = TextManager.getInstance().getText(TextId.TapToSwitch);
         tipLabel.fontSize = 24;
         tipLabel.lineHeight = 24;
         tipLabel.color = new Color(200, 200, 200, 150);
@@ -342,7 +323,7 @@ export class SceneBuilder extends Component {
         const goTitle = this.createNode('GOTitle', gameOverPanel);
         goTitle.setPosition(0, 160, 0);
         const goTitleLabel = goTitle.addComponent(Label);
-        goTitleLabel.string = '游戏结束';
+        goTitleLabel.string = TextManager.getInstance().getText(TextId.GameOver);
         goTitleLabel.fontSize = 56;
         goTitleLabel.lineHeight = 56;
         goTitleLabel.color = new Color(255, 100, 100, 255);
@@ -364,7 +345,7 @@ export class SceneBuilder extends Component {
         const bestTextNode = this.createNode('BestLabel', gameOverPanel);
         bestTextNode.setPosition(0, 10, 0);
         const bestTextLabel = bestTextNode.addComponent(Label);
-        bestTextLabel.string = '最高分';
+        bestTextLabel.string = TextManager.getInstance().getText(TextId.HighScore);
         bestTextLabel.fontSize = 20;
         bestTextLabel.lineHeight = 20;
         bestTextLabel.color = new Color(200, 200, 200, 180);
@@ -393,7 +374,7 @@ export class SceneBuilder extends Component {
         rBtnSprite.color = new Color(100, 200, 100, 255);
         const rBtnLabelNode = this.createNode('BtnLabel', restartBtn);
         const rBtnLabel = rBtnLabelNode.addComponent(Label);
-        rBtnLabel.string = '再来一次';
+        rBtnLabel.string = TextManager.getInstance().getText(TextId.TryAgain);
         rBtnLabel.fontSize = 28;
         rBtnLabel.lineHeight = 28;
         rBtnLabel.color = new Color(255, 255, 255, 255);
@@ -416,7 +397,7 @@ export class SceneBuilder extends Component {
         bBtnSprite.color = new Color(80, 120, 200, 255);
         const bBtnLabelNode = this.createNode('BtnLabel', backBtn);
         const bBtnLabel = bBtnLabelNode.addComponent(Label);
-        bBtnLabel.string = '返回主页';
+        bBtnLabel.string = TextManager.getInstance().getText(TextId.BackToHome);
         bBtnLabel.fontSize = 28;
         bBtnLabel.lineHeight = 28;
         bBtnLabel.color = new Color(255, 255, 255, 255);
@@ -452,19 +433,6 @@ export class SceneBuilder extends Component {
         const node = new Node(name);
         node.setParent(parent);
         return node;
-    }
-
-    private createLabel(text: string, parent: Node, fontSize: number, color: Color): Label {
-        const node = this.createNode('Label', parent);
-        const label = node.addComponent(Label);
-        label.string = text;
-        label.fontSize = fontSize;
-        label.lineHeight = fontSize;
-        label.color = color;
-        label.overflow = Overflow.NONE;
-        label.horizontalAlign = HorizontalTextAlignment.CENTER;
-        label.verticalAlign = VerticalTextAlignment.CENTER;
-        return label;
     }
 
     public getPlayer(): Player | null { return this._player; }

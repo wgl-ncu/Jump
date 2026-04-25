@@ -18,6 +18,12 @@ export enum MagneticPole {
 @ccclass('Player')
 export class Player extends Component {
 
+    /** 初始磁力加速度（用于按难度倍率缩放） */
+    private _baseMagneticForce: number = 0;
+
+    /** 初始最大速度（用于按难度倍率缩放） */
+    private _baseMaxSpeed: number = 0;
+
     /** 当前磁极 */
     private _currentPole: MagneticPole = MagneticPole.N;
     public get currentPole(): MagneticPole {
@@ -176,6 +182,11 @@ export class Player extends Component {
     /** 磁场反转系数（0=正常, 1=完全反转） */
     private _reversalFactor: number = 0;
 
+    onLoad() {
+        this._baseMagneticForce = this.magneticForce;
+        this._baseMaxSpeed = this.maxSpeed;
+    }
+
     start() {
         input.on(Input.EventType.TOUCH_START, this.onTouch, this);
         // Sprite可能在自身节点或子节点上（预制体在子节点"Img"上）
@@ -221,6 +232,16 @@ export class Player extends Component {
      */
     public setReversalFactor(factor: number) {
         this._reversalFactor = factor;
+    }
+
+    /**
+     * 按场景滚动难度同步玩家横向移动能力。
+     * 这里只同步基础难度倍率，不叠加道具/击飞冲刺倍率。
+     */
+    public setMovementSpeedScale(scale: number) {
+        const safeScale = Math.max(1, scale);
+        this.magneticForce = this._baseMagneticForce * safeScale;
+        this.maxSpeed = this._baseMaxSpeed * safeScale;
     }
 
     /**
@@ -774,6 +795,7 @@ export class Player extends Component {
         this._currentPole = MagneticPole.N;
         this._velocityX = 0;
         this._reversalFactor = 0;
+        this.setMovementSpeedScale(1);
         this._dashMultiplier = 1;
         this._dashTimer = 0;
         this._switchAnimTimer = -1;

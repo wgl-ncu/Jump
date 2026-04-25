@@ -22,3 +22,9 @@ node_modules/
 # WebStorm
 #//////////////////////////
 .idea/
+
+#//////////////////////////
+# Luban Generated
+#//////////////////////////
+assets/Scripts/Data/schema/
+assets/resources/LubanData/
