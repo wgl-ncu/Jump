@@ -1,4 +1,4 @@
-import { _decorator, Component, input, Input, EventTouch, Sprite, Color, Graphics, Animation } from 'cc';
+import { _decorator, Component, input, Input, EventTouch, Sprite, Color, Graphics, Animation, Node, UITransform } from 'cc';
 const { ccclass, property } = _decorator;
 
 /**
@@ -17,6 +17,11 @@ export enum MagneticPole {
  */
 @ccclass('Player')
 export class Player extends Component {
+
+    private static readonly ATTRACTION_FX_MIN_LENGTH = 44;
+    private static readonly ATTRACTION_FX_MAX_LENGTH = 620;
+    private static readonly ATTRACTION_FX_WIDTH = 1100;
+    private static readonly ATTRACTION_FX_HEIGHT = 220;
 
     /** 初始磁力加速度（用于按难度倍率缩放） */
     private _baseMagneticForce: number = 0;
@@ -165,6 +170,11 @@ export class Player extends Component {
     /** 是否有角色精灵（有预制体动画时跳过Graphics主体绘制） */
     private _hasCharacterSprite: boolean = false;
 
+    /** 角色横向吸引视觉层 */
+    private _attractionFxNode: Node | null = null;
+    private _attractionGfx: Graphics | null = null;
+    private _attractionTime: number = 0;
+
     /** ========= 磁极切换缩放动画 ========= */
 
     /** 切换动画总时长（秒） */
@@ -193,6 +203,7 @@ export class Player extends Component {
         this._sprite = this.node.getComponent(Sprite) || this.node.getComponentInChildren(Sprite);
         this._gfx = this.node.getComponentInChildren(Graphics);
         this._anim = this.node.getComponentInChildren(Animation);
+        this.createAttractionFxLayer();
 
         if (this._anim) {
             this._hasCharacterSprite = true;
@@ -378,6 +389,104 @@ export class Player extends Component {
         }
         // 重绘Graphics效果
         this.drawPlayerGfx();
+    }
+
+    private createAttractionFxLayer() {
+        const fxNode = new Node('MagneticAttractionFX');
+        fxNode.setParent(this.node);
+        fxNode.setPosition(0, 0, 0);
+        const uiTransform = fxNode.addComponent(UITransform);
+        uiTransform.setContentSize(Player.ATTRACTION_FX_WIDTH, Player.ATTRACTION_FX_HEIGHT);
+        this._attractionGfx = fxNode.addComponent(Graphics);
+        this._attractionFxNode = fxNode;
+    }
+
+    private clearAttractionEffect() {
+        this._attractionGfx?.clear();
+    }
+
+    private clamp01(value: number): number {
+        return Math.max(0, Math.min(1, value));
+    }
+
+    private lerp(from: number, to: number, t: number): number {
+        return from + (to - from) * t;
+    }
+
+    private drawArrow(gfx: Graphics, x: number, y: number, direction: number, size: number) {
+        const halfHeight = size * 0.5;
+        const backX = x - direction * size * 0.85;
+        gfx.moveTo(x + direction * size * 0.65, y);
+        gfx.lineTo(backX, y + halfHeight);
+        gfx.lineTo(backX, y - halfHeight);
+        gfx.close();
+        gfx.fill();
+    }
+
+    private updateAttractionEffect(dt: number, direction: number, availableDistance: number) {
+        const gfx = this._attractionGfx;
+        if (!gfx) return;
+
+        this._attractionTime += dt;
+        gfx.clear();
+
+        if (direction === 0 || availableDistance <= 8 || !this._isAlive) {
+            return;
+        }
+
+        const speedLimit = Math.max(1, this.maxSpeed * Math.max(this._dashMultiplier, 1));
+        const speedFactor = this.clamp01(Math.abs(this._velocityX) / speedLimit);
+        const distanceRatio = this.clamp01(availableDistance / Player.ATTRACTION_FX_MAX_LENGTH);
+        const nearFactor = 1 - distanceRatio;
+        const motionVisibility = this.clamp01(0.24 + speedFactor * 1.08);
+        const visibility = motionVisibility * this.clamp01((availableDistance + 24) / 48) * (0.48 + nearFactor * 0.52);
+        const useNorthColor = this._currentPole === MagneticPole.N;
+        const particleRgb = useNorthColor ? [255, 168, 168] : [168, 206, 255];
+        const accentRgb = useNorthColor ? [255, 224, 224] : [224, 240, 255];
+
+        if (visibility < 0.01) {
+            return;
+        }
+
+        const startX = direction * (this._radius + 18);
+        const wallReach = Math.max(0, availableDistance - Math.abs(startX));
+        const streamLength = Math.max(Math.min(wallReach, Player.ATTRACTION_FX_MAX_LENGTH), Math.min(Player.ATTRACTION_FX_MIN_LENGTH, wallReach));
+
+        const arrowSize = 12;
+        const arrowOffset = direction * (this._radius + 14);
+        for (let i = 0; i < 2; i++) {
+            const x = arrowOffset;
+            const y = i === 0 ? -12 : 12;
+            const alpha = Math.floor(255 * visibility * 0.76);
+            gfx.fillColor = new Color(accentRgb[0], accentRgb[1], accentRgb[2], alpha);
+            this.drawArrow(gfx, x, y, direction, arrowSize);
+            gfx.fill();
+        }
+
+        const densityPer100 = 3.6;
+        const particleCount = Math.max(4, Math.round((streamLength / 100) * densityPer100));
+        const particleScroll = this._attractionTime * (1.02 + speedFactor * 0.5 + nearFactor * 0.24);
+        for (let i = 0; i < particleCount; i++) {
+            const progress = (particleScroll + i / particleCount) % 1;
+            const x = startX + direction * progress * streamLength;
+            const wave = Math.sin(this._attractionTime * 6 + i * 0.9) * this.lerp(1.5, 4, distanceRatio);
+            const side = i % 2 === 0 ? -1 : 1;
+            const y = side * this.lerp(5, 12, distanceRatio) * (0.2 + 0.8 * progress) + wave;
+            const alpha = Math.floor(196 * visibility * (0.78 - progress * 0.1));
+            gfx.fillColor = new Color(particleRgb[0], particleRgb[1], particleRgb[2], alpha);
+            gfx.circle(x, y, this.lerp(1.5, 2.7, progress));
+            gfx.fill();
+        }
+
+        const ringAlpha = Math.floor(86 * visibility * (0.55 + nearFactor * 0.45));
+        gfx.strokeColor = new Color(accentRgb[0], accentRgb[1], accentRgb[2], ringAlpha);
+        gfx.lineWidth = 1.8;
+        gfx.moveTo(direction * (this._radius + 6), -18);
+        gfx.quadraticCurveTo(direction * (this._radius + 18), -28, direction * (this._radius + 34), -16);
+        gfx.stroke();
+        gfx.moveTo(direction * (this._radius + 6), 18);
+        gfx.quadraticCurveTo(direction * (this._radius + 18), 28, direction * (this._radius + 34), 16);
+        gfx.stroke();
     }
 
     private drawPlayerGfx() {
@@ -669,6 +778,7 @@ export class Player extends Component {
         }
 
         // 道具冲刺时无视磁力，保持直线前进
+        let forceDirection = 0;
         if (this._isPowerupDash) {
             // 快速衰减横向速度，保持直线
             this._velocityX *= 0.9;
@@ -680,7 +790,7 @@ export class Player extends Component {
             // 玩家S极 -> 被右侧同性排斥 -> 向左 + 被左侧异性吸引 -> 向左 → 总向左
             // 反转时：力方向取反
             const reversalMultiplier = 1 - 2 * this._reversalFactor; // 0->1, 1->-1
-            const forceDirection = this._currentPole * reversalMultiplier;
+            forceDirection = this._currentPole * reversalMultiplier;
             this._velocityX += forceDirection * this.magneticForce * this._dashMultiplier * dt;
 
             // 添加轻微阻力
@@ -705,6 +815,14 @@ export class Player extends Component {
         }
 
         this.node.setPosition(newX, playerPos.y, playerPos.z);
+
+        const attractionDirection = this._isPowerupDash
+            ? 0
+            : (forceDirection === 0 ? 0 : (forceDirection > 0 ? 1 : -1));
+        const availableDistance = attractionDirection > 0
+            ? this._rightBound - this._radius - newX
+            : (attractionDirection < 0 ? newX - (this._leftBound + this._radius) : 0);
+        this.updateAttractionEffect(dt, attractionDirection, availableDistance);
     }
 
     public die() {
@@ -714,6 +832,7 @@ export class Player extends Component {
         this._switchAnimTimer = -1;
         this._switchAnimFlipped = false;
         this.node.setScale(1, 1, 1);
+        this.clearAttractionEffect();
     }
 
     /**
@@ -800,10 +919,12 @@ export class Player extends Component {
         this._dashTimer = 0;
         this._switchAnimTimer = -1;
         this._switchAnimFlipped = false;
+        this._attractionTime = 0;
         this.node.setScale(1, 1, 1);
         this.node.setPosition(0, this.node.position.y, 0);
         this.updateVisual();
         this.playIdleAnimation();
+        this.clearAttractionEffect();
     }
 
     /**

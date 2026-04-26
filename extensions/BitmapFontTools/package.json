@@ -1,0 +1,80 @@
+{
+  "name": "bitmap-font",
+  "version": "3.1.6",
+  "description": "快速生成位图字体的插件，这可能是你见过最好用，最强大的位图工具！",
+  "author": "xu_yanfeng",
+  "main": "./main.js",
+  "package_version": 2,
+  "contributions": {
+    "builder": "./builder.js",
+    "messages": {
+      "onBuilder": {
+        "methods": [
+          "onBuilder"
+        ]
+      },
+      "font-recv_entry": {
+        "methods": [
+          "font.recv_entry"
+        ]
+      },
+      "ttf-recv_entry": {
+        "methods": [
+          "ttf.recv_entry"
+        ]
+      },
+      "openFNT": {
+        "methods": [
+          "openFNT"
+        ]
+      },
+      "openTTF": {
+        "methods": [
+          "openTTF"
+        ]
+      }
+    },
+    "menu": [
+      {
+        "path": "i18n:menu.extension/BitMap字体工具",
+        "label": "字体图集(IMAGE)",
+        "message": "openFNT"
+      },
+      {
+        "path": "i18n:menu.extension/BitMap字体工具",
+        "label": "字体文件(TTF)",
+        "message": "openTTF"
+      }
+    ],
+    "shortcuts": [],
+    "asset-db": {},
+    "assets": {}
+  },
+  "editor": ">=3.0.0",
+  "panels": {
+    "font": {
+      "main": "dockable/font_panel.js",
+      "title": "bitmap-images",
+      "type": "dockable",
+      "size": {
+        "width": 800,
+        "height": 580,
+        "min-width": 800,
+        "min-height": 580
+      }
+    },
+    "ttf": {
+      "main": "dockable/ttf_panel.js",
+      "title": "bitmap-ttf",
+      "type": "dockable",
+      "size": {
+        "width": 800,
+        "height": 580,
+        "min-width": 800,
+        "min-height": 580
+      }
+    }
+  },
+  "dependencies": {},
+  "_storeId": "384e3177751b6e98fe81378a84e6d54d"
+}

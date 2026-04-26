@@ -86,6 +86,8 @@ export class Bootstrap extends Component {
 
     private registerPrefabs() {
         UIFrame.getInstance().registerPrefab('MainUI', 'Prefabs/UI/MainUI');
+        UIFrame.getInstance().registerPrefab('BattleUI', 'Prefabs/UI/BattleUI');
+        UIFrame.getInstance().registerPrefab('GameOverUI', 'Prefabs/UI/GameOverUI');
     }
 
     private onSceneLaunched = () => {
@@ -111,6 +113,7 @@ export class Bootstrap extends Component {
 
     private initMainScene() {
         log(`${Bootstrap.TAG} 初始化主界面`);
+        UIFrame.getInstance().closeAll();
         UIFrame.getInstance().open('MainUI');
     }
 
@@ -127,6 +130,7 @@ export class Bootstrap extends Component {
         }
 
         log(`${Bootstrap.TAG} 初始化战斗场景`);
+        UIFrame.getInstance().closeAll();
 
         // 优先挂到场景现有 Canvas 下，复用正确的屏幕坐标系。
         const gameRoot = new Node(BATTLE_ROOT_NAME);

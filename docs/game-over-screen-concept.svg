@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1400" viewBox="0 0 720 1400" fill="none">
+  <defs>
+    <linearGradient id="bgGradient" x1="360" y1="0" x2="360" y2="1400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#05080d"/>
+      <stop offset="0.58" stop-color="#020304"/>
+      <stop offset="1" stop-color="#090d12"/>
+    </linearGradient>
+    <radialGradient id="warmBloom" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 700) rotate(0) scale(190 920)">
+      <stop offset="0" stop-color="#ff7a45" stop-opacity="0.42"/>
+      <stop offset="0.35" stop-color="#ff8d52" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#ff8d52" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="coolBloom" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(720 700) rotate(180) scale(190 920)">
+      <stop offset="0" stop-color="#34d2ff" stop-opacity="0.42"/>
+      <stop offset="0.35" stop-color="#65e5ff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#65e5ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="leftBeam" x1="0" y1="0" x2="126" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff6c39" stop-opacity="0.9"/>
+      <stop offset="0.18" stop-color="#ff9d63" stop-opacity="0.42"/>
+      <stop offset="0.82" stop-color="#ffe3c5" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#ffe3c5" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="rightBeam" x1="720" y1="0" x2="594" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1d8fff" stop-opacity="0.9"/>
+      <stop offset="0.18" stop-color="#57ddff" stop-opacity="0.42"/>
+      <stop offset="0.82" stop-color="#d4fbff" stop-opacity="0.04"/>
+      <stop offset="1" stop-color="#d4fbff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="panelStroke" x1="152" y1="282" x2="568" y2="930" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff8a54" stop-opacity="0.85"/>
+      <stop offset="0.32" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="0.68" stop-color="#9fedff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#47c8ff" stop-opacity="0.78"/>
+    </linearGradient>
+    <linearGradient id="panelFill" x1="360" y1="282" x2="360" y2="930" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0d121b" stop-opacity="0.86"/>
+      <stop offset="1" stop-color="#090d14" stop-opacity="0.78"/>
+    </linearGradient>
+    <linearGradient id="titleFill" x1="230" y1="430" x2="490" y2="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff6a8"/>
+      <stop offset="0.55" stop-color="#ffd455"/>
+      <stop offset="1" stop-color="#ffbf38"/>
+    </linearGradient>
+    <linearGradient id="scoreRing" x1="246" y1="0" x2="474" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffbf8f"/>
+      <stop offset="0.5" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#95f3ff"/>
+    </linearGradient>
+    <linearGradient id="ctaFill" x1="214" y1="0" x2="506" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff7a45"/>
+      <stop offset="0.54" stop-color="#ff9c72"/>
+      <stop offset="1" stop-color="#3fd3ff"/>
+    </linearGradient>
+    <linearGradient id="secondaryStroke" x1="214" y1="0" x2="506" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff9c72" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#6de7ff" stop-opacity="0.72"/>
+    </linearGradient>
+    <radialGradient id="scoreCore" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(360 610) rotate(90) scale(164 164)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="0.38" stop-color="#61ddff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#61ddff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="mascotGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(556 545) rotate(90) scale(156 104)">
+      <stop offset="0" stop-color="#ff7f61" stop-opacity="0.3"/>
+      <stop offset="0.55" stop-color="#ff7f61" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ff7f61" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softBlur" x="-80" y="-80" width="880" height="1560" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="panelGlow" x="120" y="250" width="480" height="720" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <filter id="buttonGlow" x="170" y="796" width="380" height="118" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="titleShadow" x="188" y="402" width="344" height="128" filterUnits="userSpaceOnUse">
+      <feOffset dy="8"/>
+      <feGaussianBlur stdDeviation="4"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.396078 0 0 0 0 0.121569 0 0 0 0 0 0 0 0 0.42 0"/>
+    </filter>
+  </defs>
+
+  <rect width="720" height="1400" fill="url(#bgGradient)"/>
+  <rect width="720" height="1400" fill="url(#warmBloom)"/>
+  <rect width="720" height="1400" fill="url(#coolBloom)"/>
+  <rect width="126" height="1400" fill="url(#leftBeam)"/>
+  <rect x="594" width="126" height="1400" fill="url(#rightBeam)"/>
+
+  <g opacity="0.86">
+    <circle cx="82" cy="72" r="2.3" fill="#fff0d9"/>
+    <circle cx="116" cy="442" r="2.8" fill="#ffd079"/>
+    <circle cx="104" cy="1040" r="2.4" fill="#ffe2be"/>
+    <circle cx="600" cy="176" r="2.1" fill="#b8f5ff"/>
+    <circle cx="612" cy="430" r="2.8" fill="#6be5ff"/>
+    <circle cx="638" cy="1068" r="2.2" fill="#b8f5ff"/>
+    <circle cx="384" cy="730" r="2.2" fill="#ffffff" opacity="0.72"/>
+    <circle cx="288" cy="1186" r="1.8" fill="#ffffff" opacity="0.54"/>
+    <circle cx="456" cy="278" r="1.8" fill="#ffffff" opacity="0.52"/>
+  </g>
+
+  <g opacity="0.48" filter="url(#softBlur)">
+    <ellipse cx="70" cy="254" rx="22" ry="140" fill="#ffb178"/>
+    <ellipse cx="644" cy="398" rx="22" ry="156" fill="#5de5ff"/>
+    <ellipse cx="360" cy="1244" rx="108" ry="22" fill="#ffffff" opacity="0.12"/>
+  </g>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="62" y="100" font-size="44" fill="#ff606a" font-weight="700">N</text>
+    <text x="360" y="102" font-size="56" fill="#ffffff" font-weight="700" text-anchor="middle">5</text>
+    <text x="650" y="92" font-size="28" fill="#ff6c7c" text-anchor="end">♡♡♡</text>
+  </g>
+
+  <g filter="url(#panelGlow)" opacity="0.24">
+    <rect x="168" y="298" width="384" height="628" rx="44" fill="#72e6ff"/>
+  </g>
+
+  <rect x="154" y="282" width="412" height="648" rx="42" fill="url(#panelFill)" stroke="url(#panelStroke)" stroke-width="2"/>
+  <rect x="170" y="298" width="380" height="616" rx="34" fill="#06090e" fill-opacity="0.48"/>
+
+  <path d="M214 338 H314" stroke="#ff9365" stroke-width="3" stroke-linecap="round" opacity="0.88"/>
+  <path d="M406 338 H506" stroke="#63deff" stroke-width="3" stroke-linecap="round" opacity="0.88"/>
+  <circle cx="360" cy="338" r="6" fill="#ffffff" opacity="0.82"/>
+
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+    <text x="360" y="418" font-size="24" fill="#ffd9ad" opacity="0.82" letter-spacing="8">RUN SUMMARY</text>
+  </g>
+
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle" font-weight="700">
+    <text x="360" y="492" font-size="72" fill="#8e3000" opacity="0.38" filter="url(#titleShadow)">本局结算</text>
+    <text x="360" y="492" font-size="72" fill="#fff7c1" stroke="#ff7a1e" stroke-width="18" stroke-linejoin="round">本局结算</text>
+    <text x="360" y="492" font-size="72" fill="#fff0a7" stroke="#ffb12a" stroke-width="8" stroke-linejoin="round">本局结算</text>
+    <text x="360" y="492" font-size="72" fill="url(#titleFill)">本局结算</text>
+  </g>
+
+  <circle cx="360" cy="610" r="164" fill="url(#scoreCore)"/>
+  <circle cx="360" cy="610" r="106" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1.5"/>
+  <path d="M258 610 A102 102 0 0 1 360 508" stroke="#ff965f" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+  <path d="M462 610 A102 102 0 0 1 360 712" stroke="#59e2ff" stroke-width="10" stroke-linecap="round" opacity="0.92"/>
+  <path d="M360 508 A102 102 0 0 1 462 610" stroke="url(#scoreRing)" stroke-width="4" stroke-linecap="round" opacity="0.82"/>
+  <path d="M360 712 A102 102 0 0 1 258 610" stroke="url(#scoreRing)" stroke-width="4" stroke-linecap="round" opacity="0.82"/>
+  <circle cx="292" cy="534" r="4" fill="#ffd29c"/>
+  <circle cx="432" cy="686" r="4" fill="#9af2ff"/>
+
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+    <text x="360" y="626" font-size="90" fill="#ffffff" font-weight="700">5</text>
+    <text x="360" y="690" font-size="26" fill="#aeb5c1" opacity="0.84">本局得分</text>
+    <text x="360" y="734" font-size="22" fill="#9ca5b4" opacity="0.74">最高纪录</text>
+    <text x="360" y="770" font-size="40" fill="#ffd24f" font-weight="700">475</text>
+  </g>
+
+  <g filter="url(#buttonGlow)" opacity="0.38">
+    <rect x="194" y="820" width="332" height="72" rx="36" fill="#ff8d67"/>
+  </g>
+
+  <rect x="194" y="820" width="332" height="72" rx="36" fill="url(#ctaFill)"/>
+  <rect x="198" y="824" width="324" height="64" rx="32" fill="#fff8f2" fill-opacity="0.08"/>
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle" font-weight="700">
+    <text x="360" y="866" font-size="32" fill="#fff8ce" stroke="#ff7d1d" stroke-width="10" stroke-linejoin="round">继续挑战</text>
+    <text x="360" y="866" font-size="32" fill="#ffe987" stroke="#ffb12a" stroke-width="4" stroke-linejoin="round">继续挑战</text>
+    <text x="360" y="866" font-size="32" fill="#fff0a7">继续挑战</text>
+  </g>
+
+  <rect x="194" y="912" width="332" height="72" rx="36" fill="#0c131b" fill-opacity="0.7" stroke="url(#secondaryStroke)" stroke-width="2"/>
+  <text x="360" y="958" font-family="Arial, Helvetica, sans-serif" font-size="31" fill="#fff4d4" font-weight="700" text-anchor="middle">返回主页</text>
+
+  <g opacity="0.72">
+    <path d="M220 1056 H304" stroke="#ff8c62" stroke-width="2" stroke-linecap="round" opacity="0.62"/>
+    <path d="M416 1056 H500" stroke="#62ddff" stroke-width="2" stroke-linecap="round" opacity="0.62"/>
+    <text x="360" y="1064" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#b6bec9" text-anchor="middle">磁场记录已同步完成</text>
+  </g>
+
+  <ellipse cx="556" cy="545" rx="104" ry="156" fill="url(#mascotGlow)"/>
+  <g transform="translate(560 544) rotate(-8)">
+    <path d="M-54 -58 C-62 -92, -34 -122, 10 -120 C52 -118, 76 -84, 62 -44 C52 -16, 30 -8, 6 -6 C-22 -4, -46 -20, -54 -58 Z" fill="#ff665f"/>
+    <path d="M-8 -106 C14 -124, 40 -128, 60 -108 C76 -92, 78 -68, 62 -52 C48 -38, 24 -34, 2 -40 C-18 -46, -26 -64, -24 -80 C-22 -92, -16 -100, -8 -106 Z" fill="#ff8a70"/>
+    <circle cx="-14" cy="-40" r="42" fill="#fff5f0"/>
+    <circle cx="-32" cy="-46" r="7" fill="#5a2d43"/>
+    <circle cx="6" cy="-44" r="7" fill="#5a2d43"/>
+    <circle cx="-30" cy="-48" r="2.4" fill="#ffffff"/>
+    <circle cx="8" cy="-46" r="2.4" fill="#ffffff"/>
+    <path d="M-22 -20 C-10 -6, 6 -6, 18 -20" stroke="#e15a6b" stroke-width="5" stroke-linecap="round"/>
+    <path d="M-28 4 C-10 24, 18 24, 38 8 C56 -6, 54 -30, 52 -44" stroke="#ff665f" stroke-width="24" stroke-linecap="round" fill="none"/>
+    <path d="M46 -12 C62 2, 70 22, 60 44" stroke="#ff665f" stroke-width="16" stroke-linecap="round" fill="none"/>
+    <path d="M18 16 C32 44, 30 72, 8 94" stroke="#ff665f" stroke-width="22" stroke-linecap="round" fill="none"/>
+    <path d="M-4 24 C-12 54, -6 82, 16 108" stroke="#ff8a70" stroke-width="18" stroke-linecap="round" fill="none"/>
+    <path d="M-38 10 C-56 28, -62 52, -56 72" stroke="#ff8a70" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <path d="M-52 46 C-76 44, -90 60, -94 82" stroke="#fff5f0" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <path d="M54 54 C80 48, 96 60, 102 84" stroke="#fff5f0" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <circle cx="-92" cy="84" r="10" fill="#ff665f"/>
+    <circle cx="104" cy="88" r="10" fill="#ff665f"/>
+    <path d="M-58 -96 C-74 -110, -100 -110, -112 -92" stroke="#ff8a70" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <path d="M26 -114 C44 -132, 74 -134, 90 -116" stroke="#ff8a70" stroke-width="14" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+    <text x="360" y="1326" font-size="22" fill="#c7ced8" opacity="0.66">点击屏幕切换磁极</text>
+    <text x="360" y="1360" font-size="16" fill="#788293" opacity="0.56">左右磁场保持对冲，中心信息保持纯净</text>
+  </g>
+</svg>

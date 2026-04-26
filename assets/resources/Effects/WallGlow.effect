@@ -1,0 +1,98 @@
+CCEffect %{ 
+  techniques:
+  - passes:
+    - vert: wall-glow-vs:vert
+      frag: wall-glow-fs:frag
+      rasterizerState:
+        cullMode: none
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendSrcAlpha: src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      properties:
+        baseColor: { value: [0.784314, 0.313726, 0.156863, 1.0], editor: { type: color } }
+        glowColor: { value: [1.0, 0.588235, 0.376471, 1.0], editor: { type: color } }
+        wallParams: { value: [1.0, 0.0, 0.68, 0.45] }
+}%
+
+CCProgram wall-glow-vs %{ 
+  precision highp float;
+
+  #include <builtin/uniforms/cc-global>
+  #if USE_LOCAL
+    #include <builtin/uniforms/cc-local>
+  #endif
+
+  in vec3 a_position;
+  in vec2 a_texCoord;
+  in vec4 a_color;
+
+  out vec2 v_uv;
+  out vec4 v_color;
+
+  vec4 vert () {
+    vec4 pos = vec4(a_position, 1.0);
+
+    #if USE_LOCAL
+      pos = cc_matWorld * pos;
+    #endif
+
+    pos = cc_matViewProj * pos;
+    v_uv = a_texCoord;
+    v_color = a_color;
+    return pos;
+  }
+}%
+
+CCProgram wall-glow-fs %{ 
+  precision highp float;
+
+  in vec2 v_uv;
+  in vec4 v_color;
+
+  uniform Constant {
+    vec4 baseColor;
+    vec4 glowColor;
+    vec4 wallParams;
+  };
+
+  vec4 frag () {
+    float glowToRight = wallParams.x;
+    float scrollOffset = wallParams.y;
+    float glowStrength = wallParams.w;
+
+    float localU = mix(1.0 - v_uv.x, v_uv.x, glowToRight);
+    float fieldU = clamp(localU, 0.0, 1.0);
+    float edge = 1.0 - fieldU;
+    float nearField = exp(-fieldU * (3.6 - glowStrength * 0.8));
+    float softTail = pow(edge, 2.8);
+    float fieldMask = mix(softTail, nearField, 0.58);
+    fieldMask *= 1.0 - smoothstep(0.72, 1.0, fieldU);
+
+    float flow1 = 0.5 + 0.5 * sin((v_uv.y * 7.4 - scrollOffset * 1.35) * 6.2831853 + fieldU * 5.2);
+    float flow2 = 0.5 + 0.5 * sin((v_uv.y * 3.8 + scrollOffset * 0.75) * 6.2831853 - fieldU * 8.6);
+    float filamentA = smoothstep(0.72, 0.985, flow1);
+    float filamentB = smoothstep(0.88, 1.0, flow2);
+    float filaments = (filamentA * 0.48 + filamentB * 0.28) * pow(edge, 1.6);
+
+    float edgeLift = pow(edge, 0.42);
+    float pulse = 0.86 + 0.14 * sin(scrollOffset * 3.1 + v_uv.y * 2.8);
+    float sourceRipple = smoothstep(0.94, 1.0, sin((v_uv.y * 2.7 - scrollOffset * 0.62) * 6.2831853) * 0.5 + 0.5);
+
+    vec3 haloRgb = glowColor.rgb * fieldMask * pulse * (0.32 + glowStrength * 0.34);
+    haloRgb += glowColor.rgb * filaments * (0.12 + glowStrength * 0.2);
+    haloRgb += baseColor.rgb * edgeLift * (0.045 + sourceRipple * 0.04);
+
+    float alpha = fieldMask * (0.045 + glowStrength * 0.09);
+    alpha += filaments * (0.014 + glowStrength * 0.035);
+    alpha += edgeLift * (0.01 + sourceRipple * 0.012);
+
+    return vec4(min(haloRgb, vec3(1.0)), clamp(alpha, 0.0, 1.0)) * v_color;
+  }
+}%

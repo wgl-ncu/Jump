@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="280" viewBox="0 0 420 280" fill="none">
+  <defs>
+    <radialGradient id="sourceGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(40 140) rotate(90) scale(82 44)">
+      <stop offset="0" stop-color="#ff9865" stop-opacity="0.42"/>
+      <stop offset="0.48" stop-color="#ffbf88" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#ffd4a7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="trail" x1="70" y1="140" x2="226" y2="140" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffd39e" stop-opacity="0"/>
+      <stop offset="0.55" stop-color="#fff0da" stop-opacity="0.24"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="focusGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(238 140) rotate(90) scale(54 54)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="0.42" stop-color="#b8f3ff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#73dcff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="arrowWarm" x1="96" y1="140" x2="224" y2="140" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffd6a6" stop-opacity="0.56"/>
+      <stop offset="1" stop-color="#fff9ef" stop-opacity="0.96"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="40" cy="140" rx="34" ry="86" fill="url(#sourceGlow)"/>
+  <path d="M72 140 C118 132, 164 132, 224 140" stroke="url(#trail)" stroke-width="7" stroke-linecap="round" opacity="0.58"/>
+
+  <path d="M96 140 L110 134 L110 146 Z" fill="#ffd9ab" opacity="0.42"/>
+  <path d="M140 140 L156 133 L156 147 Z" fill="#ffd9ab" opacity="0.62"/>
+  <path d="M186 140 L206 131 L206 149 Z" fill="url(#arrowWarm)" opacity="0.88"/>
+  <path d="M220 140 L242 130 L242 150 Z" fill="#fffaf2" opacity="0.96"/>
+
+  <circle cx="118" cy="128" r="2.1" fill="#ffe9c7" opacity="0.34"/>
+  <circle cx="132" cy="150" r="1.8" fill="#ffd59b" opacity="0.28"/>
+  <circle cx="168" cy="126" r="1.7" fill="#fff2dc" opacity="0.32"/>
+  <circle cx="178" cy="154" r="2" fill="#ffd7a8" opacity="0.26"/>
+  <circle cx="208" cy="122" r="1.9" fill="#fff5e5" opacity="0.3"/>
+
+  <ellipse cx="238" cy="140" rx="54" ry="42" fill="url(#focusGlow)"/>
+  <path d="M198 118 C216 110, 236 110, 252 120" stroke="#fff2db" stroke-width="2.4" stroke-linecap="round" opacity="0.58"/>
+  <path d="M198 162 C216 170, 236 170, 252 160" stroke="#dffbff" stroke-width="2.4" stroke-linecap="round" opacity="0.52"/>
+</svg>

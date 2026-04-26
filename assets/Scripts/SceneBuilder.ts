@@ -1,9 +1,8 @@
-import { _decorator, Component, Node, UITransform, Size, Sprite, SpriteFrame, Color, Label, Graphics, Canvas, Button, Overflow, HorizontalTextAlignment, VerticalTextAlignment, resources, Prefab, instantiate } from 'cc';
+import { _decorator, Component, Node, UITransform, Size, Sprite, Color, Label, Graphics, Canvas, Button, Overflow, HorizontalTextAlignment, VerticalTextAlignment, ScrollView, resources, Prefab, instantiate } from 'cc';
 import { Player, MagneticPole } from './Player';
 import { ObstacleSpawner } from './ObstacleSpawner';
 import { UIManager } from './UIManager';
 import { MagneticField } from './MagneticField';
-import { ScrollingBackground } from './ScrollingBackground';
 import { MagneticZoneManager } from './MagneticZoneManager';
 import { TextManager } from './Data/TextManager';
 import { TextId } from './Data/TextId';
@@ -23,8 +22,6 @@ const { ccclass } = _decorator;
 @ccclass('SceneBuilder')
 export class SceneBuilder extends Component {
 
-    private static readonly BATTLE_BG_PATH = 'Art/Map/BattleBG/spriteFrame';
-
     private readonly DESIGN_HEIGHT = 1280;
     private readonly DESIGN_WIDTH = 720;
 
@@ -33,7 +30,7 @@ export class SceneBuilder extends Component {
     private readonly RIGHT_BOUND = 310;  // 右墙内侧
 
     /** 墙壁宽度 */
-    private readonly WALL_WIDTH = 40;
+    private readonly WALL_WIDTH = 46;
 
     /** 玩家Y位置 */
     private readonly PLAYER_Y = 200;
@@ -43,12 +40,17 @@ export class SceneBuilder extends Component {
     /** 玩家预制体（从resources加载） */
     private _playerPrefab: Prefab | null = null;
 
+    /** 结算界面预制体（从resources加载） */
+    private _gameOverPrefab: Prefab | null = null;
+
+    /** 战斗界面预制体（从resources加载） */
+    private _battleUIPrefab: Prefab | null = null;
+
     // 引用
     private _player: Player | null = null;
     private _obstacleSpawner: ObstacleSpawner | null = null;
     private _magneticField: MagneticField | null = null;
     private _uiManager: UIManager | null = null;
-    private _scrollingBg: ScrollingBackground | null = null;
     private _magneticZoneManager: MagneticZoneManager | null = null;
 
     start() {
@@ -59,8 +61,25 @@ export class SceneBuilder extends Component {
                 } else {
                     this._playerPrefab = prefab;
                 }
-                this.buildScene();
-                this._built = true;
+
+                resources.load('Prefabs/UI/GameOverUI', Prefab, (gameOverErr, gameOverPrefab) => {
+                    if (gameOverErr) {
+                        console.warn('加载结算界面预制体失败，使用代码创建:', gameOverErr);
+                    } else {
+                        this._gameOverPrefab = gameOverPrefab;
+                    }
+
+                    resources.load('Prefabs/UI/BattleUI', Prefab, (battleUiErr, battleUiPrefab) => {
+                        if (battleUiErr) {
+                            console.warn('加载战斗界面预制体失败，使用代码创建:', battleUiErr);
+                        } else {
+                            this._battleUIPrefab = battleUiPrefab;
+                        }
+
+                        this.buildScene();
+                        this._built = true;
+                    });
+                });
             });
         }
     }
@@ -78,44 +97,11 @@ export class SceneBuilder extends Component {
         const uiTransform = this.node.getComponent(UITransform) || this.node.addComponent(UITransform);
         uiTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
 
-        this.createBackgroundLayer();
         this.createMagneticFieldLayer();
         this.createMagneticZoneLayer();
         this.createGameLayer();
         this.createObstacleLayer();
         this.createUILayer();
-    }
-
-    /**
-     * 背景层 - 深色背景 + 向上滚动的网格线
-     */
-    private createBackgroundLayer() {
-        const bgLayer = this.createNode('BackgroundLayer', this.node);
-        const uiTransform = bgLayer.addComponent(UITransform);
-        uiTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
-
-        // 默认深色背景；BattleBG 加载成功后会替换为底图。
-        const bgSprite = bgLayer.addComponent(Sprite);
-        bgSprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        bgSprite.type = Sprite.Type.SIMPLE;
-        bgSprite.color = new Color(15, 15, 30, 255);
-
-        resources.load(SceneBuilder.BATTLE_BG_PATH, SpriteFrame, (err, spriteFrame) => {
-            if (err) {
-                console.warn('加载 BattleBG 失败，继续使用纯色背景:', err);
-                return;
-            }
-
-            if (!bgSprite.isValid) {
-                return;
-            }
-
-            bgSprite.spriteFrame = spriteFrame;
-            bgSprite.color = Color.WHITE;
-        });
-
-        // 滚动背景（向上滚动的线条效果）
-        this._scrollingBg = bgLayer.addComponent(ScrollingBackground);
     }
 
     /**
@@ -262,42 +248,6 @@ export class SceneBuilder extends Component {
         const uiTransform = uiLayer.addComponent(UITransform);
         uiTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
 
-        // 分数显示（顶部中央）
-        const scoreNode = this.createNode('ScoreLabel', uiLayer);
-        scoreNode.setPosition(0, this.DESIGN_HEIGHT / 2 - 80, 0);
-        const scoreLabel = scoreNode.addComponent(Label);
-        scoreLabel.string = '0';
-        scoreLabel.fontSize = 48;
-        scoreLabel.lineHeight = 48;
-        scoreLabel.color = new Color(255, 255, 255, 255);
-        scoreLabel.overflow = Overflow.NONE;
-        scoreLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
-        scoreNode.getComponent(UITransform)!.setContentSize(new Size(200, 60));
-
-        // 磁极指示器（左上角）
-        const poleNode = this.createNode('PoleIndicator', uiLayer);
-        poleNode.setPosition(-280, this.DESIGN_HEIGHT / 2 - 80, 0);
-        const poleIndicator = poleNode.addComponent(Label);
-        poleIndicator.string = 'N';
-        poleIndicator.fontSize = 36;
-        poleIndicator.lineHeight = 36;
-        poleIndicator.color = new Color(255, 80, 80, 255);
-        poleIndicator.overflow = Overflow.NONE;
-        poleIndicator.horizontalAlign = HorizontalTextAlignment.CENTER;
-        poleNode.getComponent(UITransform)!.setContentSize(new Size(60, 50));
-
-        // 磁场状态指示器（左上角，磁极指示下方）
-        const fieldStatusNode = this.createNode('FieldStatus', uiLayer);
-        fieldStatusNode.setPosition(-280, this.DESIGN_HEIGHT / 2 - 120, 0);
-        const fieldStatusLabel = fieldStatusNode.addComponent(Label);
-        fieldStatusLabel.string = '';
-        fieldStatusLabel.fontSize = 18;
-        fieldStatusLabel.lineHeight = 18;
-        fieldStatusLabel.color = new Color(180, 80, 255, 0);
-        fieldStatusLabel.overflow = Overflow.NONE;
-        fieldStatusLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
-        fieldStatusNode.getComponent(UITransform)!.setContentSize(new Size(120, 30));
-
         // 提示文本
         const tipNode = this.createNode('TipLabel', uiLayer);
         tipNode.setPosition(0, -this.DESIGN_HEIGHT / 2 + 60, 0);
@@ -309,8 +259,180 @@ export class SceneBuilder extends Component {
         tipLabel.overflow = Overflow.NONE;
         tipLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
 
-        // === 游戏结束面板 ===
-        const gameOverPanel = this.createNode('GameOverPanel', uiLayer);
+        // UIManager
+        const uiManager = uiLayer.addComponent(UIManager);
+        uiManager.startPanel = null;  // 无需开始面板，进入直接开始
+        uiManager.gameOverPanel = null;
+        uiManager.finalScoreLabel = null;
+        uiManager.bestScoreLabel = null;
+
+        this._uiManager = uiManager;
+    }
+
+    private createBattleUIView(parent: Node): {
+        root: Node | null;
+        scoreLabel: Label | null;
+        poleLabel: Label | null;
+        poleNIcon: Node | null;
+        poleSIcon: Node | null;
+        livesScrollView: ScrollView | null;
+    } {
+        if (!this._battleUIPrefab) {
+            return this.createFallbackBattleUIView(parent);
+        }
+
+        const battleRoot = instantiate(this._battleUIPrefab);
+        battleRoot.name = 'BattleUI';
+        battleRoot.setParent(parent);
+        battleRoot.setPosition(0, 0, 0);
+        battleRoot.setScale(1, 1, 1);
+
+        const battleCanvas = battleRoot.getComponent(Canvas);
+        if (battleCanvas) {
+            battleCanvas.destroy();
+        }
+
+        const rootTransform = battleRoot.getComponent(UITransform) || battleRoot.addComponent(UITransform);
+        rootTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
+
+        const scoreNode = this.findChildByPath(battleRoot, ['Top', 'Point']);
+        const nNode = this.findChildByPath(battleRoot, ['Top', 'NSTip', 'N']);
+        const sNode = this.findChildByPath(battleRoot, ['Top', 'NSTip', 'S']);
+        const heartsNode = this.findChildByPath(battleRoot, ['Top', 'Heart', 'HeartsSV']);
+
+        const scoreLabel = scoreNode?.getComponent(Label) || null;
+        const livesScrollView = heartsNode?.getComponent(ScrollView) || null;
+
+        if (!scoreLabel || !nNode || !sNode || !livesScrollView) {
+            battleRoot.destroy();
+            console.warn('BattleUI 预制体缺少战斗UI所需控件，回退为代码创建界面');
+            return this.createFallbackBattleUIView(parent);
+        }
+
+        return {
+            root: battleRoot,
+            scoreLabel,
+            poleLabel: null,
+            poleNIcon: nNode,
+            poleSIcon: sNode,
+            livesScrollView,
+        };
+    }
+
+    private createFallbackBattleUIView(parent: Node): {
+        root: Node | null;
+        scoreLabel: Label | null;
+        poleLabel: Label | null;
+        poleNIcon: Node | null;
+        poleSIcon: Node | null;
+        livesScrollView: ScrollView | null;
+    } {
+        const scoreNode = this.createNode('ScoreLabel', parent);
+        scoreNode.setPosition(0, this.DESIGN_HEIGHT / 2 - 80, 0);
+        const scoreLabel = scoreNode.addComponent(Label);
+        scoreLabel.string = '0';
+        scoreLabel.fontSize = 48;
+        scoreLabel.lineHeight = 48;
+        scoreLabel.color = new Color(255, 255, 255, 255);
+        scoreLabel.overflow = Overflow.NONE;
+        scoreLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
+        scoreNode.getComponent(UITransform)!.setContentSize(new Size(200, 60));
+
+        const poleNode = this.createNode('PoleIndicator', parent);
+        poleNode.setPosition(-280, this.DESIGN_HEIGHT / 2 - 80, 0);
+        const poleIndicator = poleNode.addComponent(Label);
+        poleIndicator.string = 'N';
+        poleIndicator.fontSize = 36;
+        poleIndicator.lineHeight = 36;
+        poleIndicator.color = new Color(255, 80, 80, 255);
+        poleIndicator.overflow = Overflow.NONE;
+        poleIndicator.horizontalAlign = HorizontalTextAlignment.CENTER;
+        poleNode.getComponent(UITransform)!.setContentSize(new Size(60, 50));
+
+        return {
+            root: null,
+            scoreLabel,
+            poleLabel: poleIndicator,
+            poleNIcon: null,
+            poleSIcon: null,
+            livesScrollView: null,
+        };
+    }
+
+    private createGameOverPanelView(parent: Node): {
+        panel: Node;
+        finalScoreLabel: Label | null;
+        bestScoreLabel: Label | null;
+        restartButton: Node | null;
+        backButton: Node | null;
+    } {
+        const prefabView = this.createGameOverPanelFromPrefab(parent);
+        if (prefabView) {
+            return prefabView;
+        }
+
+        return this.createFallbackGameOverPanel(parent);
+    }
+
+    private createGameOverPanelFromPrefab(parent: Node): {
+        panel: Node;
+        finalScoreLabel: Label | null;
+        bestScoreLabel: Label | null;
+        restartButton: Node | null;
+        backButton: Node | null;
+    } | null {
+        if (!this._gameOverPrefab) {
+            return null;
+        }
+
+        const panel = instantiate(this._gameOverPrefab);
+        panel.name = 'GameOverPanel';
+        panel.setParent(parent);
+        panel.setPosition(0, 0, 0);
+        panel.setScale(1, 1, 1);
+        panel.active = false;
+
+        const panelCanvas = panel.getComponent(Canvas);
+        if (panelCanvas) {
+            panelCanvas.destroy();
+        }
+
+        const panelTransform = panel.getComponent(UITransform) || panel.addComponent(UITransform);
+        panelTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
+
+        const allButtons = panel.getComponentsInChildren(Button);
+        const restartButton = this.findButtonNode(panel, allButtons, ['once', 'again', 'restart', 'retry', 'try']);
+        const remainingButtons = allButtons.filter((button) => button.node !== restartButton);
+        const backButton = this.findButtonNode(panel, remainingButtons, ['back', 'home', 'main']);
+
+        const nonButtonLabels = panel.getComponentsInChildren(Label).filter((label) => !this.hasButtonAncestor(label.node, panel));
+        const finalScoreLabel = this.findLabelNode(nonButtonLabels, ['final', 'current', 'score', 'result', 'point']);
+        const remainingLabels = nonButtonLabels.filter((label) => label !== finalScoreLabel);
+        const bestScoreLabel = this.findLabelNode(remainingLabels, ['best', 'high', 'record']);
+
+        if (!restartButton || !backButton || !finalScoreLabel || !bestScoreLabel) {
+            panel.destroy();
+            console.warn('GameOverUI 预制体缺少结算所需控件，回退为代码创建界面');
+            return null;
+        }
+
+        return {
+            panel,
+            finalScoreLabel,
+            bestScoreLabel,
+            restartButton,
+            backButton,
+        };
+    }
+
+    private createFallbackGameOverPanel(parent: Node): {
+        panel: Node;
+        finalScoreLabel: Label | null;
+        bestScoreLabel: Label | null;
+        restartButton: Node | null;
+        backButton: Node | null;
+    } {
+        const gameOverPanel = this.createNode('GameOverPanel', parent);
         gameOverPanel.active = false;
         const gopUT = gameOverPanel.addComponent(UITransform);
         gopUT.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
@@ -319,7 +441,6 @@ export class SceneBuilder extends Component {
         gopSprite.type = Sprite.Type.SIMPLE;
         gopSprite.color = new Color(0, 0, 0, 180);
 
-        // 游戏结束标题
         const goTitle = this.createNode('GOTitle', gameOverPanel);
         goTitle.setPosition(0, 160, 0);
         const goTitleLabel = goTitle.addComponent(Label);
@@ -330,7 +451,6 @@ export class SceneBuilder extends Component {
         goTitleLabel.overflow = Overflow.NONE;
         goTitleLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
 
-        // 最终分数
         const finalNode = this.createNode('FinalScore', gameOverPanel);
         finalNode.setPosition(0, 60, 0);
         const finalLabel = finalNode.addComponent(Label);
@@ -341,7 +461,6 @@ export class SceneBuilder extends Component {
         finalLabel.overflow = Overflow.NONE;
         finalLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
 
-        // 最高分标签
         const bestTextNode = this.createNode('BestLabel', gameOverPanel);
         bestTextNode.setPosition(0, 10, 0);
         const bestTextLabel = bestTextNode.addComponent(Label);
@@ -352,7 +471,6 @@ export class SceneBuilder extends Component {
         bestTextLabel.overflow = Overflow.NONE;
         bestTextLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
 
-        // 最高分
         const bestNode = this.createNode('BestScore', gameOverPanel);
         bestNode.setPosition(0, -20, 0);
         const bestLabel = bestNode.addComponent(Label);
@@ -363,7 +481,6 @@ export class SceneBuilder extends Component {
         bestLabel.overflow = Overflow.NONE;
         bestLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
 
-        // 重新开始按钮
         const restartBtn = this.createNode('RestartButton', gameOverPanel);
         restartBtn.setPosition(0, -110, 0);
         const rBtnUT = restartBtn.addComponent(UITransform);
@@ -386,7 +503,6 @@ export class SceneBuilder extends Component {
         rButton.pressedColor = new Color(80, 160, 80, 255);
         rButton.hoverColor = new Color(120, 220, 120, 255);
 
-        // 返回主页按钮
         const backBtn = this.createNode('BackButton', gameOverPanel);
         backBtn.setPosition(0, -190, 0);
         const bBtnUT = backBtn.addComponent(UITransform);
@@ -409,24 +525,67 @@ export class SceneBuilder extends Component {
         bButton.pressedColor = new Color(60, 90, 160, 255);
         bButton.hoverColor = new Color(100, 140, 220, 255);
 
-        // UIManager
-        const uiManager = uiLayer.addComponent(UIManager);
-        uiManager.scoreLabel = scoreLabel;
-        uiManager.poleLabel = poleIndicator;
-        uiManager.startPanel = null;  // 无需开始面板，进入直接开始
-        uiManager.gameOverPanel = gameOverPanel;
-        uiManager.finalScoreLabel = finalLabel;
-        uiManager.bestScoreLabel = bestLabel;
+        return {
+            panel: gameOverPanel,
+            finalScoreLabel: finalLabel,
+            bestScoreLabel: bestLabel,
+            restartButton: restartBtn,
+            backButton: backBtn,
+        };
+    }
 
-        // 按钮点击事件
-        restartBtn.on(Node.EventType.TOUCH_END, () => {
-            uiManager.onRestartButtonClicked();
-        });
-        backBtn.on(Node.EventType.TOUCH_END, () => {
-            uiManager.onBackToMainButtonClicked();
-        });
+    private findButtonNode(root: Node, buttons: Button[], keywords: string[]): Node | null {
+        for (const button of buttons) {
+            const buttonNode = button.node;
+            const nodeName = buttonNode.name.toLowerCase();
+            if (keywords.some((keyword) => nodeName.includes(keyword))) {
+                return buttonNode;
+            }
+        }
 
-        this._uiManager = uiManager;
+        for (const button of buttons) {
+            const buttonNode = button.node;
+            if (buttonNode !== root) {
+                return buttonNode;
+            }
+        }
+
+        return null;
+    }
+
+    private findLabelNode(labels: Label[], keywords: string[]): Label | null {
+        for (const label of labels) {
+            const nodeName = label.node.name.toLowerCase();
+            if (keywords.some((keyword) => nodeName.includes(keyword))) {
+                return label;
+            }
+        }
+
+        return labels[0] || null;
+    }
+
+    private findChildByPath(root: Node, path: string[]): Node | null {
+        let current: Node | null = root;
+        for (const name of path) {
+            current = current?.getChildByName(name) || null;
+            if (!current) {
+                return null;
+            }
+        }
+
+        return current;
+    }
+
+    private hasButtonAncestor(node: Node, root: Node): boolean {
+        let current: Node | null = node;
+        while (current && current !== root) {
+            if (current.getComponent(Button)) {
+                return true;
+            }
+            current = current.parent;
+        }
+
+        return false;
     }
 
     private createNode(name: string, parent: Node): Node {
@@ -439,6 +598,5 @@ export class SceneBuilder extends Component {
     public getObstacleSpawner(): ObstacleSpawner | null { return this._obstacleSpawner; }
     public getUIManager(): UIManager | null { return this._uiManager; }
     public getMagneticField(): MagneticField | null { return this._magneticField; }
-    public getScrollingBackground(): ScrollingBackground | null { return this._scrollingBg; }
     public getMagneticZoneManager(): MagneticZoneManager | null { return this._magneticZoneManager; }
 }

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1400" viewBox="0 0 720 1400">
+  <defs>
+    <linearGradient id="leftVeil" x1="0" x2="1">
+      <stop offset="0" stop-color="#ff6b42" stop-opacity="1"/>
+      <stop offset="0.08" stop-color="#ff7a4d" stop-opacity="0.82"/>
+      <stop offset="0.20" stop-color="#ff9866" stop-opacity="0.46"/>
+      <stop offset="0.40" stop-color="#ffbb82" stop-opacity="0.18"/>
+      <stop offset="0.68" stop-color="#ffd39b" stop-opacity="0.045"/>
+      <stop offset="1" stop-color="#ffd39b" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="rightVeil" x1="1" x2="0">
+      <stop offset="0" stop-color="#3677ff" stop-opacity="1"/>
+      <stop offset="0.08" stop-color="#39b6ff" stop-opacity="0.84"/>
+      <stop offset="0.22" stop-color="#39ddff" stop-opacity="0.48"/>
+      <stop offset="0.42" stop-color="#8df4ff" stop-opacity="0.19"/>
+      <stop offset="0.70" stop-color="#b1fbff" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#b1fbff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="mist" x="-60%" y="-20%" width="220%" height="140%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="lineGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="2.8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="118" height="1400" fill="url(#leftVeil)"/>
+  <rect x="602" width="118" height="1400" fill="url(#rightVeil)"/>
+
+  <g filter="url(#mist)" opacity="0.78">
+    <path d="M-4 0 C6 260, 12 520, 22 760 C32 1010, 28 1220, 24 1400" fill="none" stroke="#ff8257" stroke-width="24" opacity="0.055"/>
+    <path d="M724 0 C714 260, 708 520, 698 760 C688 1010, 692 1220, 696 1400" fill="none" stroke="#36cfff" stroke-width="24" opacity="0.06"/>
+    <path d="M38 0 C48 320, 50 620, 58 900 C64 1120, 66 1280, 68 1400" fill="none" stroke="#ffd09a" stroke-width="18" opacity="0.038"/>
+    <path d="M682 0 C672 320, 670 620, 662 900 C656 1120, 654 1280, 652 1400" fill="none" stroke="#9ff8ff" stroke-width="18" opacity="0.042"/>
+  </g>
+
+  <g filter="url(#soft)" opacity="0.78">
+    <path d="M14 0 C24 340, 26 680, 24 930 C22 1120, 18 1270, 14 1400" fill="none" stroke="#ffc58b" stroke-width="6" opacity="0.12"/>
+    <path d="M34 0 C44 330, 50 640, 54 900 C56 1110, 50 1270, 44 1400" fill="none" stroke="#ffe0b5" stroke-width="3.2" opacity="0.075"/>
+    <path d="M58 0 C68 380, 72 720, 78 960 C84 1150, 87 1290, 90 1400" fill="none" stroke="#ffd29f" stroke-width="2.4" opacity="0.05"/>
+    <path d="M3 0 C7 360, 9 680, 8 930 C7 1130, 5 1275, 3 1400" fill="none" stroke="#ff6f4b" stroke-width="3.5" opacity="0.055"/>
+
+    <path d="M706 0 C696 340, 694 680, 696 930 C698 1120, 702 1270, 706 1400" fill="none" stroke="#86f3ff" stroke-width="6" opacity="0.13"/>
+    <path d="M686 0 C676 330, 670 640, 666 900 C664 1110, 670 1270, 676 1400" fill="none" stroke="#ccfbff" stroke-width="3.2" opacity="0.08"/>
+    <path d="M662 0 C652 380, 648 720, 642 960 C636 1150, 633 1290, 630 1400" fill="none" stroke="#9bf5ff" stroke-width="2.4" opacity="0.055"/>
+    <path d="M717 0 C713 360, 711 680, 712 930 C713 1130, 715 1275, 717 1400" fill="none" stroke="#3e83ff" stroke-width="3.5" opacity="0.06"/>
+  </g>
+
+  <g filter="url(#lineGlow)">
+    <circle cx="92" cy="120" r="2.2" fill="#ffe6b1" opacity="0.92"/>
+    <circle cx="186" cy="450" r="1.8" fill="#ffd69b" opacity="0.76"/>
+    <circle cx="352" cy="790" r="2.4" fill="#ffffff" opacity="0.86"/>
+    <circle cx="545" cy="452" r="2.1" fill="#b7fbff" opacity="0.88"/>
+    <circle cx="646" cy="1180" r="1.8" fill="#a8f8ff" opacity="0.82"/>
+    <circle cx="105" cy="990" r="1.5" fill="#fff0c8" opacity="0.68"/>
+    <circle cx="604" cy="255" r="1.6" fill="#d8fdff" opacity="0.72"/>
+    <circle cx="292" cy="1180" r="1.7" fill="#ffffff" opacity="0.70"/>
+  </g>
+</svg>

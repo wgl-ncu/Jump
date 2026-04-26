@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1480" viewBox="0 0 900 1480" fill="none">
+  <defs>
+    <linearGradient id="bgGlow" x1="0" y1="0" x2="900" y2="1480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0a1018"/>
+      <stop offset="1" stop-color="#040608"/>
+    </linearGradient>
+    <linearGradient id="leftVeil" x1="0" y1="0" x2="190" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff6b42" stop-opacity="0.94"/>
+      <stop offset="0.18" stop-color="#ff965e" stop-opacity="0.38"/>
+      <stop offset="0.72" stop-color="#ffd3a8" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#ffd3a8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="mainArc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd9ad" stop-opacity="0"/>
+      <stop offset="0.22" stop-color="#ffc16d" stop-opacity="0.88"/>
+      <stop offset="0.7" stop-color="#ffffff" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#c8f9ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="softArc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffe0b9" stop-opacity="0"/>
+      <stop offset="0.34" stop-color="#fff0d8" stop-opacity="0.44"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="cardStroke" x1="110" y1="0" x2="790" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3a4656" stop-opacity="0.36"/>
+      <stop offset="0.5" stop-color="#8da0b8" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#3a4656" stop-opacity="0.36"/>
+    </linearGradient>
+    <radialGradient id="playerGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(0 0) rotate(90) scale(88 88)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.56"/>
+      <stop offset="0.38" stop-color="#b9f3ff" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#73dcff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softBlur" x="0" y="0" width="900" height="1480" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+
+  <rect width="900" height="1480" fill="url(#bgGlow)"/>
+  <rect width="190" height="1480" fill="url(#leftVeil)"/>
+
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+    <text x="450" y="76" font-size="34" fill="#ffffff" opacity="0.94">Magnetic Distance Adaptation</text>
+    <text x="450" y="112" font-size="16" fill="#b1bccb" opacity="0.82">Do not scale one whole effect. Keep the anchors stable and only adapt the bridge length and intensity.</text>
+    <text x="450" y="142" font-size="14" fill="#8893a2" opacity="0.74">Fixed source near wall + stretchable middle bridge + stable player focus</text>
+  </g>
+
+  <g transform="translate(0 0)">
+    <rect x="110" y="200" width="680" height="330" rx="28" fill="#0a0f15" fill-opacity="0.72" stroke="url(#cardStroke)"/>
+    <text x="170" y="250" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#ffcf9a">FAR</text>
+    <text x="742" y="250" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#96a2b3" text-anchor="end">Long bridge, low opacity, minimal particles</text>
+    <g filter="url(#softBlur)" opacity="0.54">
+      <path d="M126 368 C236 330, 420 332, 640 360" stroke="#ffab70" stroke-width="18" stroke-linecap="round" opacity="0.11"/>
+    </g>
+    <path d="M132 372 C250 334, 432 334, 650 364" stroke="url(#mainArc)" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+    <path d="M148 430 C270 414, 444 412, 654 382" stroke="url(#softArc)" stroke-width="2" stroke-linecap="round" opacity="0.42"/>
+    <circle cx="270" cy="368" r="2" fill="#ffe5bb" opacity="0.5"/>
+    <circle cx="446" cy="364" r="2.2" fill="#fff6e6" opacity="0.46"/>
+    <g transform="translate(698 372)">
+      <ellipse cx="0" cy="0" rx="72" ry="52" fill="url(#playerGlow)" opacity="0.64"/>
+      <circle cx="0" cy="0" r="28" fill="#75c8ff"/>
+      <circle cx="-10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="-8" cy="-2" r="3" fill="#1c58a8"/>
+      <circle cx="10" cy="-2" r="3" fill="#1c58a8"/>
+      <path d="M-10 12 C-3 18, 5 18, 12 12" stroke="#1557a0" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <text x="170" y="484" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#7f8a9a" text-anchor="start">Source glow stays near the wall.</text>
+    <text x="170" y="506" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#7f8a9a" text-anchor="start">Only the middle span stretches to cover the larger distance.</text>
+  </g>
+
+  <g transform="translate(0 0)">
+    <rect x="110" y="575" width="680" height="330" rx="28" fill="#0a0f15" fill-opacity="0.76" stroke="url(#cardStroke)"/>
+    <text x="170" y="625" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#ffd7a8">MID</text>
+    <text x="742" y="625" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#a0adbd" text-anchor="end">Most common state, balanced bridge and focus</text>
+    <g filter="url(#softBlur)" opacity="0.68">
+      <path d="M126 746 C218 710, 360 714, 546 750" stroke="#ffab70" stroke-width="18" stroke-linecap="round" opacity="0.12"/>
+    </g>
+    <path d="M132 748 C226 710, 370 714, 560 754" stroke="url(#mainArc)" stroke-width="4.2" stroke-linecap="round" opacity="0.86"/>
+    <path d="M146 816 C252 802, 388 800, 566 770" stroke="url(#softArc)" stroke-width="2.1" stroke-linecap="round" opacity="0.68"/>
+    <circle cx="250" cy="740" r="2.3" fill="#ffe7bc" opacity="0.72"/>
+    <circle cx="370" cy="742" r="2.1" fill="#ffd69a" opacity="0.66"/>
+    <circle cx="498" cy="754" r="2.8" fill="#fff8ea" opacity="0.82"/>
+    <g transform="translate(620 752)">
+      <ellipse cx="0" cy="0" rx="84" ry="58" fill="url(#playerGlow)" opacity="0.82"/>
+      <circle cx="0" cy="0" r="28" fill="#75c8ff"/>
+      <circle cx="-10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="-8" cy="-2" r="3" fill="#1c58a8"/>
+      <circle cx="10" cy="-2" r="3" fill="#1c58a8"/>
+      <path d="M-10 12 C-3 18, 5 18, 12 12" stroke="#1557a0" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <text x="170" y="859" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#7f8a9a" text-anchor="start">Main arc is clear, soft arc appears, player glow becomes readable.</text>
+    <text x="170" y="881" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#7f8a9a" text-anchor="start">This should be the default runtime look for most movement.</text>
+  </g>
+
+  <g transform="translate(0 0)">
+    <rect x="110" y="950" width="680" height="330" rx="28" fill="#0a0f15" fill-opacity="0.8" stroke="url(#cardStroke)"/>
+    <text x="170" y="1000" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#ffe3c0">NEAR</text>
+    <text x="742" y="1000" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#aab5c4" text-anchor="end">Short bridge, stronger focus, do not add more lines</text>
+    <g filter="url(#softBlur)" opacity="0.74">
+      <path d="M126 1120 C190 1086, 292 1094, 416 1130" stroke="#ffab70" stroke-width="20" stroke-linecap="round" opacity="0.13"/>
+    </g>
+    <path d="M132 1124 C198 1088, 302 1096, 430 1132" stroke="url(#mainArc)" stroke-width="4.4" stroke-linecap="round"/>
+    <path d="M144 1186 C226 1172, 316 1168, 436 1146" stroke="url(#softArc)" stroke-width="2.2" stroke-linecap="round" opacity="0.74"/>
+    <circle cx="240" cy="1116" r="2.4" fill="#ffe7bc" opacity="0.78"/>
+    <circle cx="326" cy="1120" r="2.5" fill="#ffd69a" opacity="0.72"/>
+    <circle cx="398" cy="1130" r="3.2" fill="#fff8ea" opacity="0.9"/>
+    <g transform="translate(488 1132)">
+      <ellipse cx="0" cy="0" rx="98" ry="68" fill="url(#playerGlow)"/>
+      <circle cx="0" cy="0" r="28" fill="#75c8ff"/>
+      <circle cx="-10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="-8" cy="-2" r="3" fill="#1c58a8"/>
+      <circle cx="10" cy="-2" r="3" fill="#1c58a8"/>
+      <path d="M-10 12 C-3 18, 5 18, 12 12" stroke="#1557a0" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <text x="170" y="1234" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#7f8a9a" text-anchor="start">Bridge gets shorter, not denser. Strength comes from brightness and focus.</text>
+    <text x="170" y="1256" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#7f8a9a" text-anchor="start">Near distance should feel concentrated, not visually noisy.</text>
+  </g>
+
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="110" y="1360" font-size="16" fill="#ffffff" opacity="0.9">Runtime mapping</text>
+    <text x="110" y="1394" font-size="14" fill="#a7b1be" opacity="0.82">distance increases -> bridge length increases</text>
+    <text x="110" y="1420" font-size="14" fill="#a7b1be" opacity="0.82">distance decreases -> opacity, focus glow, and attraction strength increase</text>
+    <text x="110" y="1446" font-size="14" fill="#a7b1be" opacity="0.82">left/right switching -> keep one directional asset and mirror with scaleX</text>
+  </g>
+</svg>

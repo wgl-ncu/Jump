@@ -15,7 +15,7 @@ export class MainUI extends UIPanel {
     private _starting = false;
 
     protected onPanelInit(): void {
-        const startBtn = this.node.getChildByName('StartBtn');
+        const startBtn = this.node.getChildByPath('BtnGroup/StartBtn');
         if (!startBtn) {
             console.error('[MainUI] 未找到 StartBtn 节点');
             return;

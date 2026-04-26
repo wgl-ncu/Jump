@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, UITransform, Size, Sprite, Color, Graphics } from 'cc';
+import { _decorator, Component, Node, UITransform, Size, Sprite, Color, Graphics, Material, resources, SpriteFrame, Vec4, EffectAsset } from 'cc';
 import { Obstacle, ObstacleCharge } from './Obstacle';
 import { Coin } from './Coin';
 import { InvincibleItem } from './InvincibleItem';
@@ -8,12 +8,21 @@ const { ccclass, property } = _decorator;
 
 /**
  * 障碍物生成器 - 纵向卷轴版
- * 
+ *
  * 障碍物从屏幕底部生成，向上移动
  * 支持带磁极障碍物生成
  */
 @ccclass('ObstacleSpawner')
 export class ObstacleSpawner extends Component {
+    private static readonly WALL_HEIGHT = 1400;
+    private static readonly FIELD_VEIL_WIDTH = 92;
+    private static readonly WALL_MATERIAL_PATH = 'Effects/WallGlow';
+    private static readonly FIELD_GLOW_STRENGTH = 0.92;
+    private static readonly FIELD_LINE_GAP = 150;
+    private static readonly FIELD_VISUAL_SPEED_SCALE = 0.45;
+    private static readonly FIELD_OVERLAY_PATH = 'Art/Map/MagneticFieldOverlay/spriteFrame';
+    private static readonly FIELD_OVERLAY_EFFECT_PATH = 'Effects/MagneticFieldOverlay';
+
 
     @property({ tooltip: '生成间隔（秒）' })
     public spawnInterval: number = 1.8;
@@ -181,6 +190,27 @@ export class ObstacleSpawner extends Component {
     /** 墙壁滚动偏移 */
     private _wallOffset: number = 0;
 
+    /** Continuous shader time for magnetic overlay, never wrapped per line gap. */
+    private _fieldShaderTime: number = 0;
+
+    private _wallMaterialAsset: Material | null = null;
+    private _leftWallMaterials: Material[] = [];
+    private _rightWallMaterials: Material[] = [];
+
+    /** 墙壁辉光材质资源 */
+
+    /** 左墙辉光材质 */
+
+    /** 右墙辉光材质 */
+
+    /** Magnetic field line drawing layer */
+    private _fieldLineGraphics: Graphics | null = null;
+
+    private _fieldOverlaySprites: Sprite[] = [];
+    private _fieldOverlayNodes: Node[] = [];
+    private _fieldOverlayMaterials: Material[] = [];
+    private _usingFieldOverlay: boolean = false;
+
     /** 当前分数（用于难度判断） */
     private _currentScore: number = 0;
 
@@ -191,64 +221,395 @@ export class ObstacleSpawner extends Component {
     }
 
     /**
-     * 创建左右墙壁（用不同颜色的图片/精灵表示）
+     * 创建左右墙壁纯色辉光效果
      */
     private createWalls() {
-        // 左墙 - 橙红色
-        this._leftWall = this.createWallNode('LeftWall', -this.screenWidth / 2 + this.wallWidth / 2, new Color(200, 80, 40, 255));
-        this._leftWall.setParent(this.node);
-
-        // 右墙 - 青蓝色
-        this._rightWall = this.createWallNode('RightWall', this.screenWidth / 2 - this.wallWidthRight / 2, new Color(40, 120, 200, 255));
-        this._rightWall.setParent(this.node);
-
-        // 墙壁装饰纹理
-        this.addWallDecoration(this._leftWall, new Color(255, 120, 60, 200), new Color(160, 50, 20, 255));
-        this.addWallDecoration(this._rightWall, new Color(60, 160, 255, 200), new Color(20, 80, 160, 255));
+        this.createMagneticFieldLayer();
     }
 
-    private createWallNode(name: string, x: number, color: Color): Node {
+    private createWallNode(
+        name: string,
+        x: number,
+        _width: number,
+        spritePath: string,
+        baseColor: Color,
+        glowColor: Color,
+        glowToRight: boolean,
+    ): Node {
         const node = new Node(name);
         node.setPosition(x, 0, 0);
         const ut = node.addComponent(UITransform);
-        ut.setContentSize(new Size(this.wallWidth, 1400));
-        const sprite = node.addComponent(Sprite);
-        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        sprite.type = Sprite.Type.SIMPLE;
-        sprite.color = color;
+        ut.setContentSize(new Size(1, ObstacleSpawner.WALL_HEIGHT));
+
+        const veilSprite = this.createWallGlowSprite(
+            node,
+            `${name}_Veil`,
+            ObstacleSpawner.FIELD_VEIL_WIDTH,
+            glowToRight,
+        );
+
+        this.bindWallVisuals([veilSprite], spritePath, baseColor, glowColor, glowToRight);
+
         return node;
     }
 
+    private createWallGlowSprite(parent: Node, name: string, glowWidth: number, glowToRight: boolean): Sprite {
+        const glowNode = new Node(name);
+        glowNode.setParent(parent);
+        glowNode.setPosition(glowToRight ? glowWidth * 0.5 : -glowWidth * 0.5, 0, 0);
+
+        const glowUT = glowNode.addComponent(UITransform);
+        glowUT.setContentSize(new Size(glowWidth, ObstacleSpawner.WALL_HEIGHT));
+
+        const glowSprite = glowNode.addComponent(Sprite);
+        glowSprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        glowSprite.type = Sprite.Type.SIMPLE;
+        glowSprite.color = Color.WHITE;
+        return glowSprite;
+    }
+
     /**
-     * 给墙壁添加装饰条纹
+     * 绑定墙体本体和辉光层。
      */
-    private addWallDecoration(wallNode: Node, lineColor: Color, darkColor: Color) {
-        const gfxNode = new Node('WallGfx');
-        gfxNode.setParent(wallNode);
-        const ut = gfxNode.addComponent(UITransform);
-        ut.setContentSize(new Size(this.wallWidth, 1400));
-        const gfx = gfxNode.addComponent(Graphics);
+    private bindWallVisuals(
+        glowSprites: Sprite[],
+        spritePath: string,
+        baseColor: Color,
+        glowColor: Color,
+        glowToRight: boolean,
+    ) {
+        resources.load(spritePath, SpriteFrame, (spriteErr, spriteFrame) => {
+            if (spriteErr || !spriteFrame) {
+                console.warn(`[ObstacleSpawner] Failed to load field sprite frame: ${spritePath}`, spriteErr);
+                return;
+            }
 
-        const w = this.wallWidth;
-        const h = 1400;
+            if (glowSprites.some(sprite => !sprite.node.isValid)) return;
 
-        // 画斜条纹装饰
-        gfx.strokeColor = lineColor;
-        gfx.lineWidth = 2;
-        const stripeGap = 30;
-        for (let i = -1400; i < 1400; i += stripeGap) {
-            gfx.moveTo(-w / 2, i);
-            gfx.lineTo(w / 2, i + stripeGap / 2);
+            for (const glowSprite of glowSprites) {
+                glowSprite.spriteFrame = spriteFrame;
+            }
+
+            this.loadWallMaterial((wallMaterialAsset) => {
+                if (glowSprites.some(sprite => !sprite.node.isValid)) return;
+
+                const glowMaterials = glowSprites.map((glowSprite) => {
+                    const glowMaterial = new Material();
+                    glowMaterial.copy(wallMaterialAsset);
+                    glowSprite.customMaterial = glowMaterial;
+                    this.updateWallMaterial(glowMaterial, baseColor, glowColor, glowToRight, this._wallOffset, 0, ObstacleSpawner.FIELD_GLOW_STRENGTH);
+                    return glowMaterial;
+                });
+
+                if (glowToRight) {
+                    this._leftWallMaterials = glowMaterials;
+                } else {
+                    this._rightWallMaterials = glowMaterials;
+                }
+            });
+        });
+    }
+
+    private loadWallMaterial(onLoaded: (wallMaterialAsset: Material) => void) {
+        if (this._wallMaterialAsset) {
+            onLoaded(this._wallMaterialAsset);
+            return;
         }
+
+        resources.load(ObstacleSpawner.WALL_MATERIAL_PATH, Material, (materialErr, wallMaterialAsset) => {
+            if (materialErr || !wallMaterialAsset) {
+                console.warn('[ObstacleSpawner] Failed to load wall glow material', materialErr);
+                return;
+            }
+
+            this._wallMaterialAsset = wallMaterialAsset;
+            onLoaded(wallMaterialAsset);
+        });
+    }
+
+    private updateWallMaterial(
+        material: Material,
+        baseColor: Color,
+        glowColor: Color,
+        glowToRight: boolean,
+        offset: number,
+        coreRatio: number,
+        glowStrength: number,
+    ) {
+        material.setProperty('baseColor', this.toShaderColor(baseColor));
+        material.setProperty('glowColor', this.toShaderColor(glowColor));
+        material.setProperty('wallParams', new Vec4(glowToRight ? 1 : 0, offset / 84, coreRatio, glowStrength));
+    }
+
+    private toShaderColor(color: Color): Vec4 {
+        return new Vec4(color.r / 255, color.g / 255, color.b / 255, color.a / 255);
+    }
+
+    private refreshWallGlow() {
+        this.refreshWallMaterialGroup(
+            this._leftWallMaterials,
+            new Color(200, 80, 40, 255),
+            new Color(255, 150, 96, 255),
+            true,
+        );
+
+        this.refreshWallMaterialGroup(
+            this._rightWallMaterials,
+            new Color(40, 120, 200, 255),
+            new Color(118, 196, 255, 255),
+            false,
+        );
+    }
+
+    private refreshWallMaterialGroup(materials: Material[], baseColor: Color, glowColor: Color, glowToRight: boolean) {
+        if (materials.length === 0) return;
+
+        for (let i = 0; i < materials.length; i++) {
+            this.updateWallMaterial(
+                materials[i],
+                baseColor,
+                glowColor,
+                glowToRight,
+                this._wallOffset,
+                0,
+                ObstacleSpawner.FIELD_GLOW_STRENGTH,
+            );
+        }
+    }
+
+    private createMagneticFieldLayer() {
+        const fieldNode = new Node('MagneticFieldLines');
+        fieldNode.setParent(this.node);
+        fieldNode.setPosition(0, 0, 0);
+        const ut = fieldNode.addComponent(UITransform);
+        ut.setContentSize(new Size(this.screenWidth, ObstacleSpawner.WALL_HEIGHT));
+        this._fieldLineGraphics = fieldNode.addComponent(Graphics);
+        this.drawMagneticFieldLines();
+        this.tryLoadMagneticFieldOverlay();
+    }
+
+    private tryLoadMagneticFieldOverlay() {
+        resources.load(ObstacleSpawner.FIELD_OVERLAY_PATH, SpriteFrame, (err, spriteFrame) => {
+            if (err || !spriteFrame || !this.node.isValid) {
+                return;
+            }
+
+            this._usingFieldOverlay = true;
+            if (this._fieldLineGraphics) {
+                this._fieldLineGraphics.clear();
+            }
+
+            const overlayHeight = ObstacleSpawner.WALL_HEIGHT;
+            const overlayCount = 1;
+            for (let i = 0; i < overlayCount; i++) {
+                const overlayNode = new Node(`MagneticFieldOverlay_${i}`);
+                overlayNode.setParent(this.node);
+                overlayNode.setPosition(0, 0, 0);
+                overlayNode.setSiblingIndex(0);
+
+                const overlayUT = overlayNode.addComponent(UITransform);
+                overlayUT.setContentSize(new Size(this.screenWidth, overlayHeight));
+
+                const overlaySprite = overlayNode.addComponent(Sprite);
+                overlaySprite.sizeMode = Sprite.SizeMode.CUSTOM;
+                overlaySprite.type = Sprite.Type.SIMPLE;
+                overlaySprite.spriteFrame = spriteFrame;
+                overlaySprite.color = Color.WHITE;
+
+                this._fieldOverlayNodes.push(overlayNode);
+                this._fieldOverlaySprites.push(overlaySprite);
+            }
+
+            this.tryApplyMagneticFieldOverlayMaterial();
+        });
+    }
+
+    private tryApplyMagneticFieldOverlayMaterial() {
+        resources.load(ObstacleSpawner.FIELD_OVERLAY_EFFECT_PATH, EffectAsset, (err, effectAsset) => {
+            if (err || !effectAsset || this._fieldOverlaySprites.length === 0) {
+                return;
+            }
+
+            this._fieldOverlayMaterials = [];
+            for (const overlaySprite of this._fieldOverlaySprites) {
+                if (!overlaySprite.node.isValid) continue;
+
+                const material = new Material();
+                material.initialize({ effectAsset });
+                this.bindOverlayTexture(material, overlaySprite);
+                overlaySprite.customMaterial = material;
+                this._fieldOverlayMaterials.push(material);
+            }
+
+            this.updateMagneticFieldOverlay();
+        });
+    }
+
+    private bindOverlayTexture(material: Material, overlaySprite: Sprite) {
+        const spriteFrame = overlaySprite.spriteFrame as any;
+        const texture = spriteFrame?.texture ?? spriteFrame?.getTexture?.();
+        if (texture) {
+            material.setProperty('mainTexture', texture);
+        }
+    }
+
+    private advanceFieldVisuals(dt: number) {
+        const visualSpeed = this._running
+            ? this._currentSpeed * this._dashSpeedMult
+            : this.moveSpeed * 0.18;
+        const fieldVisualSpeed = visualSpeed * ObstacleSpawner.FIELD_VISUAL_SPEED_SCALE;
+        this._wallOffset += fieldVisualSpeed * dt;
+        this._fieldShaderTime += (fieldVisualSpeed / ObstacleSpawner.FIELD_LINE_GAP) * dt;
+        this._wallOffset %= ObstacleSpawner.FIELD_LINE_GAP;
+        if (this._usingFieldOverlay) {
+            this.updateMagneticFieldOverlay();
+        } else {
+            this.drawMagneticFieldLines();
+        }
+    }
+
+    private updateMagneticFieldOverlay() {
+        if (this._fieldOverlayNodes.length === 0) return;
+
+        for (const material of this._fieldOverlayMaterials) {
+            material.setProperty('fieldParams', new Vec4(
+                this._fieldShaderTime,
+                0,
+                0,
+                0.78,
+            ));
+        }
+    }
+
+    private drawMagneticFieldLines() {
+        if (this._usingFieldOverlay) return;
+        if (!this._fieldLineGraphics) return;
+
+        const gfx = this._fieldLineGraphics;
+        gfx.clear();
+
+        const halfW = this.screenWidth / 2;
+        const halfH = ObstacleSpawner.WALL_HEIGHT / 2;
+        this.drawFieldVeil(gfx, halfW, halfH);
+
+        const leftX = -halfW + this.wallWidth * 0.45;
+        const rightX = halfW - this.wallWidthRight * 0.45;
+        const gap = ObstacleSpawner.FIELD_LINE_GAP;
+        const yOffset = this._wallOffset % gap;
+        const lineCount = Math.ceil(ObstacleSpawner.WALL_HEIGHT / gap) + 2;
+
+        for (let i = -1; i < lineCount; i++) {
+            const y = -halfH + i * gap + yOffset;
+            const phase = i * 0.73 + this._wallOffset * 0.018;
+            const arch = 38 + Math.sin(phase) * 18;
+            const warm = i % 2 === 0;
+
+            gfx.strokeColor = warm
+                ? new Color(255, 214, 154, 96)
+                : new Color(152, 246, 255, 102);
+            gfx.lineWidth = i % 3 === 0 ? 3.0 : 1.7;
+            gfx.moveTo(leftX, y);
+            gfx.bezierCurveTo(
+                -halfW * 0.35,
+                y + arch,
+                halfW * 0.35,
+                y + arch,
+                rightX,
+                y,
+            );
+            gfx.stroke();
+
+            if (i % 2 === 0) {
+                gfx.strokeColor = new Color(255, 255, 255, 58);
+                gfx.lineWidth = 1.1;
+                gfx.moveTo(leftX + 18, y + 20);
+                gfx.bezierCurveTo(
+                    -halfW * 0.22,
+                    y + arch + 26,
+                    halfW * 0.22,
+                    y + arch + 26,
+                    rightX - 18,
+                    y + 20,
+                );
+                gfx.stroke();
+            }
+
+            this.drawFieldCharge(gfx, leftX, rightX, y, arch, phase, warm);
+        }
+
+        this.drawCenterFieldVortex(gfx);
+    }
+
+    private drawFieldVeil(gfx: Graphics, halfW: number, halfH: number) {
+        const veilW = ObstacleSpawner.FIELD_VEIL_WIDTH;
+        const strips = 18;
+        const stripW = veilW / strips;
+        const pulse = 0.5 + 0.5 * Math.sin(this._wallOffset * 0.06);
+
+        for (let i = 0; i < strips; i++) {
+            const t = i / (strips - 1);
+            const fade = Math.pow(1 - t, 2.35);
+            const leftAlpha = Math.floor((20 + pulse * 10) * fade);
+            const rightAlpha = Math.floor((22 + (1 - pulse) * 10) * fade);
+
+            gfx.fillColor = new Color(255, 128, 78, leftAlpha);
+            gfx.rect(-halfW + i * stripW, -halfH, stripW + 1, halfH * 2);
+            gfx.fill();
+
+            gfx.fillColor = new Color(72, 203, 255, rightAlpha);
+            gfx.rect(halfW - (i + 1) * stripW, -halfH, stripW + 1, halfH * 2);
+            gfx.fill();
+        }
+
+        gfx.strokeColor = new Color(255, 220, 164, 46);
+        gfx.lineWidth = 2.2;
+        gfx.moveTo(-halfW + 22, -halfH);
+        gfx.bezierCurveTo(-halfW + 48, -halfH * 0.45, -halfW + 38, halfH * 0.3, -halfW + 20, halfH);
         gfx.stroke();
 
-        // 画边框高亮
-        gfx.strokeColor = darkColor;
-        gfx.lineWidth = 3;
-        gfx.moveTo(-w / 2, -h / 2);
-        gfx.lineTo(-w / 2, h / 2);
-        gfx.moveTo(w / 2, -h / 2);
-        gfx.lineTo(w / 2, h / 2);
+        gfx.strokeColor = new Color(168, 248, 255, 52);
+        gfx.moveTo(halfW - 22, -halfH);
+        gfx.bezierCurveTo(halfW - 48, -halfH * 0.45, halfW - 38, halfH * 0.3, halfW - 20, halfH);
+        gfx.stroke();
+    }
+
+    private drawFieldCharge(gfx: Graphics, leftX: number, rightX: number, y: number, arch: number, phase: number, warm: boolean) {
+        const t = ((this._wallOffset * 0.006 + phase * 0.17) % 1 + 1) % 1;
+        const x = leftX + (rightX - leftX) * t;
+        const chargeY = y + Math.sin(t * Math.PI) * arch;
+        const radius = warm ? 2.2 : 1.8;
+
+        gfx.fillColor = warm
+            ? new Color(255, 228, 176, 205)
+            : new Color(191, 251, 255, 215);
+        gfx.circle(x, chargeY, radius);
+        gfx.fill();
+    }
+
+    private drawCenterFieldVortex(gfx: Graphics) {
+        const pulse = 0.5 + 0.5 * Math.sin(this._wallOffset * 0.08);
+        const centerAlpha = Math.floor(34 + pulse * 30);
+        const halfW = this.screenWidth / 2;
+
+        gfx.strokeColor = new Color(255, 255, 255, centerAlpha);
+        gfx.lineWidth = 1;
+        for (let i = 0; i < 3; i++) {
+            const y = -90 + i * 95 + Math.sin(this._wallOffset * 0.025 + i) * 10;
+            const inset = 110 + i * 18;
+            gfx.moveTo(-halfW + inset, y);
+            gfx.bezierCurveTo(-70, y + 34, 70, y + 34, halfW - inset, y);
+            gfx.stroke();
+        }
+
+        gfx.strokeColor = new Color(255, 218, 160, Math.floor(44 + pulse * 24));
+        gfx.lineWidth = 1.2;
+        gfx.moveTo(-halfW + 126, 170);
+        gfx.bezierCurveTo(-70, 205, 70, 205, halfW - 126, 170);
+        gfx.stroke();
+
+        gfx.strokeColor = new Color(165, 248, 255, Math.floor(44 + (1 - pulse) * 24));
+        gfx.moveTo(-halfW + 120, -230);
+        gfx.bezierCurveTo(-60, -194, 60, -194, halfW - 120, -230);
         gfx.stroke();
     }
 
@@ -387,6 +748,8 @@ export class ObstacleSpawner extends Component {
     }
 
     update(dt: number) {
+        this.advanceFieldVisuals(dt);
+
         if (!this._running) return;
 
         if (this._isInBonusRoom) {
@@ -398,9 +761,6 @@ export class ObstacleSpawner extends Component {
             }
 
             // 滚动墙壁
-            this._wallOffset += this._currentSpeed * this._dashSpeedMult * dt;
-            if (this._wallOffset > 30) this._wallOffset -= 30;
-
             // 清理超出屏幕的障碍物（弹飞的）
             this._obstacles = this._obstacles.filter(obs => {
                 if (!obs.isValid) return false;
@@ -455,9 +815,6 @@ export class ObstacleSpawner extends Component {
         }
 
         // 滚动墙壁
-        this._wallOffset += this._currentSpeed * this._dashSpeedMult * dt;
-        if (this._wallOffset > 30) this._wallOffset -= 30;
-
         // 清理超出屏幕的障碍物
         this._obstacles = this._obstacles.filter(obs => {
             if (!obs.isValid) return false;

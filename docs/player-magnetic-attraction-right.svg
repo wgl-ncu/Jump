@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1400" viewBox="0 0 720 1400" fill="none">
+  <defs>
+    <linearGradient id="rightWall" x1="720" y1="0" x2="564" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3677ff" stop-opacity="0.92"/>
+      <stop offset="0.18" stop-color="#39c0ff" stop-opacity="0.3"/>
+      <stop offset="0.7" stop-color="#b8fbff" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#b8fbff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="sourceGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(680 700) rotate(90) scale(190 72)">
+      <stop offset="0" stop-color="#6ddcff" stop-opacity="0.42"/>
+      <stop offset="0.48" stop-color="#9fefff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#b8fbff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="trail" x1="624" y1="700" x2="390" y2="700" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d8fbff" stop-opacity="0"/>
+      <stop offset="0.55" stop-color="#effdff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="focusGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(386 700) rotate(90) scale(82 64)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="0.42" stop-color="#b8f3ff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#73dcff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="564" width="156" height="1400" fill="url(#rightWall)"/>
+  <ellipse cx="680" cy="700" rx="44" ry="198" fill="url(#sourceGlow)"/>
+  <path d="M622 700 C556 688, 488 688, 390 700" stroke="url(#trail)" stroke-width="12" stroke-linecap="round" opacity="0.56"/>
+
+  <path d="M578 700 L560 692 L560 708 Z" fill="#dffcff" opacity="0.36"/>
+  <path d="M516 700 L494 690 L494 710 Z" fill="#dffcff" opacity="0.54"/>
+  <path d="M452 700 L426 688 L426 712 Z" fill="#ebfcff" opacity="0.76"/>
+  <path d="M406 700 L378 687 L378 713 Z" fill="#f7feff" opacity="0.94"/>
+
+  <circle cx="544" cy="680" r="2.8" fill="#e7fdff" opacity="0.28"/>
+  <circle cx="530" cy="722" r="2.2" fill="#acf4ff" opacity="0.24"/>
+  <circle cx="484" cy="674" r="2.1" fill="#f1fdff" opacity="0.28"/>
+  <circle cx="468" cy="726" r="2.4" fill="#b7f6ff" opacity="0.22"/>
+  <circle cx="428" cy="668" r="2.2" fill="#f6feff" opacity="0.28"/>
+
+  <ellipse cx="386" cy="700" rx="82" ry="64" fill="url(#focusGlow)"/>
+  <path d="M444 666 C420 654, 392 654, 370 668" stroke="#eefcff" stroke-width="3.2" stroke-linecap="round" opacity="0.54"/>
+  <path d="M444 734 C420 746, 392 746, 370 732" stroke="#dffbff" stroke-width="3.2" stroke-linecap="round" opacity="0.48"/>
+</svg>

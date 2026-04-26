@@ -1,7 +1,10 @@
-import { _decorator, Component, Node, Label, Color, UITransform, Size, Overflow, HorizontalTextAlignment } from 'cc';
+import { _decorator, Component, Node, Label, Color, UITransform, Size, Overflow, HorizontalTextAlignment, ScrollView, instantiate } from 'cc';
 import { MagneticPole } from './Player';
 import { TextManager } from './Data/TextManager';
 import { TextId } from './Data/TextId';
+import { UIFrame } from './UI/UIFrame';
+import { BattleUI } from './BattleUI';
+import { GameOverUI } from './GameOverUI';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIManager')
@@ -12,6 +15,12 @@ export class UIManager extends Component {
 
     @property({ tooltip: '磁极指示标签' })
     public poleLabel: Label | null = null;
+
+    @property({ tooltip: 'N极图片节点' })
+    public poleNIcon: Node | null = null;
+
+    @property({ tooltip: 'S极图片节点' })
+    public poleSIcon: Node | null = null;
 
     @property({ tooltip: '游戏开始界面' })
     public startPanel: Node | null = null;
@@ -25,8 +34,17 @@ export class UIManager extends Component {
     @property({ tooltip: '最高分标签' })
     public bestScoreLabel: Label | null = null;
 
+    @property({ tooltip: '生命值滚动视图' })
+    public livesScrollView: ScrollView | null = null;
+
     /** 当前分数 */
     private _score: number = 0;
+
+    /** 当前磁极 */
+    private _currentPole: MagneticPole = MagneticPole.N;
+
+    /** 当前生命值 */
+    private _currentLives: number = 3;
 
     /** 最高分 */
     private _bestScore: number = 0;
@@ -45,6 +63,18 @@ export class UIManager extends Component {
 
     /** 生命值标签 */
     private _livesLabel: Label | null = null;
+
+    /** 生命值图标项 */
+    private _lifeItems: Node[] = [];
+
+    /** BattleUI 面板引用 */
+    private _battleUIPanel: BattleUI | null = null;
+
+    /** GameOverUI 面板引用 */
+    private _gameOverUIPanel: GameOverUI | null = null;
+
+    /** 结算按钮输入锁，避免沿用上一次触摸抬起事件 */
+    private _gameOverInputLocked: boolean = false;
 
     /** 无敌状态标签 */
     private _invincibleLabel: Label | null = null;
@@ -77,13 +107,125 @@ export class UIManager extends Component {
 
     start() {
         this._bestScore = parseInt(localStorage.getItem('magneticJump_bestScore') || '0', 10);
-        // 不再显示开始面板，进入battle直接开始游戏
         this.hideAllPanels();
+        this.openBattleUIPanel();
         this.createFieldStatusIndicator();
-        this.createLivesIndicator();
+        if (this.livesScrollView) {
+            this.initializeLivesScrollView();
+        } else {
+            this.createLivesIndicator();
+        }
         this.createInvincibleIndicator();
         this.createDashIndicator();
         this.createBonusRoomIndicator();
+    }
+
+    private openBattleUIPanel() {
+        const frame = UIFrame.getInstance();
+        const existingNode = frame.getPanelNode('BattleUI');
+        const existingPanel = existingNode?.getComponent(BattleUI) || null;
+
+        if (existingPanel && existingPanel.node.active) {
+            this.bindBattleUIPanel(existingPanel);
+            return;
+        }
+
+        frame.open('BattleUI', {
+            cache: true,
+            onOpened: () => {
+                const panelNode = frame.getPanelNode('BattleUI');
+                this.bindBattleUIPanel(panelNode?.getComponent(BattleUI) || null);
+            },
+        });
+    }
+
+    private bindBattleUIPanel(panel: BattleUI | null) {
+        if (!panel) return;
+
+        this._battleUIPanel = panel;
+        if (this._livesLabel?.node.isValid) {
+            this._livesLabel.node.destroy();
+        }
+        this._livesLabel = null;
+        this.scoreLabel = panel.getScoreLabel();
+        this.poleLabel = null;
+        this.poleNIcon = panel.getPoleNIcon();
+        this.poleSIcon = panel.getPoleSIcon();
+        this.livesScrollView = panel.getLivesScrollView();
+        this._lifeItems = [];
+
+        if (this.livesScrollView) {
+            this.initializeLivesScrollView();
+        }
+
+        this.updateScore(this._score);
+        this.updatePoleIndicator(this._currentPole);
+        this.updateLives(this._currentLives);
+    }
+
+    private ensureGameOverUIPanel(onReady: () => void) {
+        const frame = UIFrame.getInstance();
+        const existingNode = frame.getPanelNode('GameOverUI');
+        const existingPanel = existingNode?.getComponent(GameOverUI) || null;
+
+        if (existingPanel && existingPanel.node.active) {
+            this.bindGameOverUIPanel(existingPanel);
+            onReady();
+            return;
+        }
+
+        frame.open('GameOverUI', {
+            cache: true,
+            onOpened: () => {
+                const panelNode = frame.getPanelNode('GameOverUI');
+                const panel = panelNode?.getComponent(GameOverUI) || null;
+                this.bindGameOverUIPanel(panel);
+                onReady();
+            },
+        });
+    }
+
+    private bindGameOverUIPanel(panel: GameOverUI | null) {
+        if (!panel) return;
+
+        this._gameOverUIPanel = panel;
+        this.gameOverPanel = panel.node;
+        this.finalScoreLabel = panel.getFinalScoreLabel();
+        this.bestScoreLabel = panel.getBestScoreLabel();
+
+        const restartButton = panel.getRestartButton();
+        restartButton?.node.off(Node.EventType.TOUCH_END, this.handleRestartPressed, this);
+        restartButton?.node.on(Node.EventType.TOUCH_END, this.handleRestartPressed, this);
+
+        const backButton = panel.getBackButton();
+        backButton?.node.off(Node.EventType.TOUCH_END, this.handleBackToMainPressed, this);
+        backButton?.node.on(Node.EventType.TOUCH_END, this.handleBackToMainPressed, this);
+    }
+
+    private lockGameOverInput() {
+        this._gameOverInputLocked = true;
+        this.unschedule(this.unlockGameOverInput);
+        this.scheduleOnce(this.unlockGameOverInput, 0.2);
+    }
+
+    private unlockGameOverInput = () => {
+        this._gameOverInputLocked = false;
+    };
+
+    private handleRestartPressed() {
+        if (this._gameOverInputLocked) {
+            return;
+        }
+
+        this.onRestartButtonClicked();
+    }
+
+    private handleBackToMainPressed() {
+        if (this._gameOverInputLocked) {
+            return;
+        }
+
+        this.onBackToMainButtonClicked();
     }
 
     /**
@@ -133,6 +275,10 @@ export class UIManager extends Component {
      * 创建生命值指示器
      */
     private createLivesIndicator() {
+        if (this.livesScrollView) {
+            return;
+        }
+
         const uiLayer = this.node;
         if (!uiLayer) return;
 
@@ -152,10 +298,65 @@ export class UIManager extends Component {
         this._livesLabel.horizontalAlign = HorizontalTextAlignment.RIGHT;
     }
 
+    private initializeLivesScrollView() {
+        const content = this.livesScrollView?.content;
+        if (!content) return;
+
+        const template = content.getChildByName('item') || content.children[0] || null;
+        if (!template) return;
+
+        while (content.children.length < 3) {
+            const clone = instantiate(template);
+            clone.setParent(content);
+        }
+
+        this._lifeItems = content.children.slice(0, 3);
+
+        const itemTransform = template.getComponent(UITransform);
+        const contentTransform = content.getComponent(UITransform);
+        const itemWidth = itemTransform?.contentSize.width || 50;
+        const itemHeight = itemTransform?.contentSize.height || 50;
+        const spacing = 12;
+        const totalWidth = itemWidth * this._lifeItems.length + spacing * (this._lifeItems.length - 1);
+        const startX = -totalWidth / 2;
+        const y = template.position.y;
+
+        this._lifeItems.forEach((item, index) => {
+            item.setPosition(startX + index * (itemWidth + spacing), y, 0);
+            const transform = item.getComponent(UITransform);
+            if (transform) {
+                transform.setContentSize(new Size(itemWidth, itemHeight));
+            }
+        });
+
+        if (contentTransform) {
+            contentTransform.setContentSize(new Size(Math.max(totalWidth, 240), contentTransform.contentSize.height));
+        }
+
+        this.updateLives(3);
+    }
+
     /**
      * 更新生命值显示
      */
     public updateLives(lives: number) {
+        this._currentLives = lives;
+
+        if (this._lifeItems.length > 0) {
+            this._lifeItems.forEach((item, index) => {
+                const hasNode = item.getChildByName('Has');
+                const noneNode = item.getChildByName('None');
+                const active = index < Math.max(0, lives);
+                if (hasNode) {
+                    hasNode.active = active;
+                }
+                if (noneNode) {
+                    noneNode.active = !active;
+                }
+            });
+            return;
+        }
+
         if (!this._livesLabel) return;
         this._livesLabel.string = '♥'.repeat(Math.max(0, lives)) + '♡'.repeat(Math.max(0, 3 - lives));
         // 受伤时变红闪烁
@@ -340,6 +541,17 @@ export class UIManager extends Component {
     }
 
     public updatePoleIndicator(pole: MagneticPole) {
+        this._currentPole = pole;
+
+        if (this.poleNIcon || this.poleSIcon) {
+            if (this.poleNIcon) {
+                this.poleNIcon.active = pole === MagneticPole.N;
+            }
+            if (this.poleSIcon) {
+                this.poleSIcon.active = pole === MagneticPole.S;
+            }
+        }
+
         if (this.poleLabel) {
             this.poleLabel.string = pole === MagneticPole.N ? 'N' : 'S';
             this.poleLabel.color = pole === MagneticPole.N
@@ -350,7 +562,7 @@ export class UIManager extends Component {
 
     public showStartPanel() {
         this.setPanelVisible(this.startPanel, true);
-        this.setPanelVisible(this.gameOverPanel, false);
+        this.hideAllPanels();
     }
 
     public showGameOverPanel() {
@@ -359,19 +571,29 @@ export class UIManager extends Component {
             localStorage.setItem('magneticJump_bestScore', this._bestScore.toString());
         }
 
-        if (this.finalScoreLabel) {
-            this.finalScoreLabel.string = `${this._score}`;
-        }
-        if (this.bestScoreLabel) {
-            this.bestScoreLabel.string = `${this._bestScore}`;
-        }
+        this.ensureGameOverUIPanel(() => {
+            if (this.finalScoreLabel) {
+                this.finalScoreLabel.string = `${this._score}`;
+            }
+            if (this.bestScoreLabel) {
+                this.bestScoreLabel.string = `${this._bestScore}`;
+            }
 
-        this.setPanelVisible(this.startPanel, false);
-        this.setPanelVisible(this.gameOverPanel, true);
+            this.setPanelVisible(this.startPanel, false);
+            this.setPanelVisible(this.gameOverPanel, true);
+            this.lockGameOverInput();
+        });
     }
 
     public hideAllPanels() {
         this.setPanelVisible(this.startPanel, false);
+        this.unschedule(this.unlockGameOverInput);
+        this._gameOverInputLocked = false;
+
+        if (this.gameOverPanel?.active) {
+            UIFrame.getInstance().closePanel('GameOverUI');
+        }
+
         this.setPanelVisible(this.gameOverPanel, false);
     }
 
@@ -395,6 +617,8 @@ export class UIManager extends Component {
 
     public reset() {
         this._score = 0;
+        this._currentPole = MagneticPole.N;
+        this._currentLives = 3;
         this.updateScore(0);
         this.updatePoleIndicator(MagneticPole.N);
         this.updateFieldStatus(0);

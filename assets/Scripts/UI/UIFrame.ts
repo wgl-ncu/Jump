@@ -218,13 +218,16 @@ export class UIFrame extends Component {
     private finishOpen(panelPath: string, panelNode: Node, options: UIPanelOptions): void {
         const { cache = true, modal = false, maskAlpha = 160, data = null, onOpened, onClosed } = options;
 
+        const panelComp = (panelNode.getComponent(panelPath) as any) || (panelNode.getComponent('UIPanel') as any);
+        const targetLayer = (panelComp?.layer as UILayer | undefined) ?? UILayer.Panel;
+
         // 模态遮罩
         if (modal) {
             this.addMask(panelNode, maskAlpha);
         }
 
-        // 添加到面板层
-        const panelLayer = this._layers.get(UILayer.Panel) || this._layers.get(UILayer.Popup);
+        // 添加到目标层
+        const panelLayer = this._layers.get(targetLayer) || this._layers.get(UILayer.Panel) || this._layers.get(UILayer.Popup);
         if (panelLayer) {
             panelNode.setParent(panelLayer);
         }
@@ -234,7 +237,6 @@ export class UIFrame extends Component {
         this._panelStack.push(entry);
 
         // 通知面板打开
-        const panelComp = panelNode.getComponent('UIPanel') as any;
         if (panelComp && panelComp.onPanelOpen) {
             panelComp.onPanelOpen(data);
         }
@@ -327,6 +329,18 @@ export class UIFrame extends Component {
     public getTopPanel(): string | null {
         if (this._panelStack.length === 0) return null;
         return this._panelStack[this._panelStack.length - 1].panelPath;
+    }
+
+    /** 获取已打开或缓存的面板节点 */
+    public getPanelNode(panelPath: string): Node | null {
+        for (let index = this._panelStack.length - 1; index >= 0; index--) {
+            const entry = this._panelStack[index];
+            if (entry.panelPath === panelPath) {
+                return entry.node;
+            }
+        }
+
+        return this._panelCache.get(panelPath) || null;
     }
 
     /** 面板栈是否为空 */

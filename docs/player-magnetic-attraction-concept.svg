@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1400" viewBox="0 0 720 1400" fill="none">
+  <defs>
+    <linearGradient id="leftVeil" x1="0" y1="0" x2="150" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff6b42" stop-opacity="0.94"/>
+      <stop offset="0.18" stop-color="#ff955f" stop-opacity="0.3"/>
+      <stop offset="0.68" stop-color="#ffd3a7" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#ffd3a7" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="rightVeil" x1="720" y1="0" x2="570" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3677ff" stop-opacity="0.94"/>
+      <stop offset="0.18" stop-color="#37c5ff" stop-opacity="0.3"/>
+      <stop offset="0.68" stop-color="#b8fbff" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#b8fbff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="sourceWarm" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(40 0) rotate(90) scale(176 70)">
+      <stop offset="0" stop-color="#ff9a67" stop-opacity="0.42"/>
+      <stop offset="0.48" stop-color="#ffc38d" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffd4a7" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sourceCool" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(680 0) rotate(90) scale(176 70)">
+      <stop offset="0" stop-color="#6ddcff" stop-opacity="0.42"/>
+      <stop offset="0.48" stop-color="#9fefff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#b8fbff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="warmTrail" x1="100" y1="0" x2="334" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffd39e" stop-opacity="0"/>
+      <stop offset="0.55" stop-color="#fff0da" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="coolTrail" x1="620" y1="0" x2="386" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d8fbff" stop-opacity="0"/>
+      <stop offset="0.55" stop-color="#effdff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="playerGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(360 0) rotate(90) scale(84 84)">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="0.42" stop-color="#b8f3ff" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#73dcff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="720" height="1400" fill="#020305"/>
+  <rect width="150" height="1400" fill="url(#leftVeil)"/>
+  <rect x="570" width="150" height="1400" fill="url(#rightVeil)"/>
+
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+    <text x="360" y="74" font-size="28" fill="#ffffff" opacity="0.92">Magnetic Move FX</text>
+    <text x="360" y="106" font-size="14" fill="#aeb8c5" opacity="0.78">Directional arrow flow with a few particles. Pulled, but still quiet.</text>
+    <text x="360" y="134" font-size="13" fill="#8f99a8" opacity="0.7">Small arrows toward the target direction + faint trail + sparse particle drift</text>
+  </g>
+
+  <g transform="translate(0 0)">
+    <text x="360" y="188" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#ffcf9a" text-anchor="middle" opacity="0.92">MOVE LEFT</text>
+    <ellipse cx="40" cy="404" rx="40" ry="162" fill="url(#sourceWarm)"/>
+    <path d="M104 404 C172 392, 240 392, 334 404" stroke="url(#warmTrail)" stroke-width="12" stroke-linecap="round" opacity="0.56"/>
+    <path d="M150 404 L168 396 L168 412 Z" fill="#ffd9ab" opacity="0.34"/>
+    <path d="M214 404 L236 394 L236 414 Z" fill="#ffd9ab" opacity="0.52"/>
+    <path d="M278 404 L304 392 L304 416 Z" fill="#ffe7c4" opacity="0.76"/>
+    <path d="M324 404 L352 391 L352 417 Z" fill="#fffaf2" opacity="0.94"/>
+    <circle cx="182" cy="382" r="2.4" fill="#ffe8c7" opacity="0.28"/>
+    <circle cx="198" cy="426" r="2" fill="#ffd49a" opacity="0.22"/>
+    <circle cx="246" cy="376" r="2" fill="#fff1dc" opacity="0.28"/>
+    <circle cx="264" cy="430" r="2.2" fill="#ffd8a7" opacity="0.22"/>
+    <circle cx="304" cy="370" r="2" fill="#fff5e5" opacity="0.28"/>
+    <g transform="translate(360 404)">
+      <ellipse cx="0" cy="0" rx="80" ry="60" fill="url(#playerGlow)"/>
+      <path d="M-56 -34 C-32 -46, -4 -46, 18 -32" stroke="#fff2db" stroke-width="3" stroke-linecap="round" opacity="0.54"/>
+      <path d="M-56 34 C-32 46, -4 46, 18 32" stroke="#dffbff" stroke-width="3" stroke-linecap="round" opacity="0.48"/>
+      <circle cx="0" cy="0" r="28" fill="#75c8ff"/>
+      <circle cx="-10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="-8" cy="-2" r="3" fill="#1c58a8"/>
+      <circle cx="10" cy="-2" r="3" fill="#1c58a8"/>
+      <path d="M-10 12 C-3 18, 5 18, 12 12" stroke="#1557a0" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <g transform="translate(0 650)">
+    <text x="360" y="188" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#b9f5ff" text-anchor="middle" opacity="0.92">MOVE RIGHT</text>
+    <ellipse cx="680" cy="404" rx="40" ry="162" fill="url(#sourceCool)"/>
+    <path d="M616 404 C548 392, 480 392, 386 404" stroke="url(#coolTrail)" stroke-width="12" stroke-linecap="round" opacity="0.56"/>
+    <path d="M570 404 L552 396 L552 412 Z" fill="#dffcff" opacity="0.34"/>
+    <path d="M506 404 L484 394 L484 414 Z" fill="#dffcff" opacity="0.52"/>
+    <path d="M442 404 L416 392 L416 416 Z" fill="#ebfcff" opacity="0.76"/>
+    <path d="M396 404 L368 391 L368 417 Z" fill="#f7feff" opacity="0.94"/>
+    <circle cx="538" cy="382" r="2.4" fill="#e7fdff" opacity="0.28"/>
+    <circle cx="522" cy="426" r="2" fill="#acf4ff" opacity="0.22"/>
+    <circle cx="474" cy="376" r="2" fill="#f1fdff" opacity="0.28"/>
+    <circle cx="456" cy="430" r="2.2" fill="#b7f6ff" opacity="0.22"/>
+    <circle cx="416" cy="370" r="2" fill="#f6feff" opacity="0.28"/>
+    <g transform="translate(360 404)">
+      <ellipse cx="0" cy="0" rx="80" ry="60" fill="url(#playerGlow)"/>
+      <path d="M56 -34 C32 -46, 4 -46, -18 -32" stroke="#eefcff" stroke-width="3" stroke-linecap="round" opacity="0.54"/>
+      <path d="M56 34 C32 46, 4 46, -18 32" stroke="#dffbff" stroke-width="3" stroke-linecap="round" opacity="0.48"/>
+      <circle cx="0" cy="0" r="28" fill="#75c8ff"/>
+      <circle cx="-10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="10" cy="-4" r="9" fill="#e9f8ff"/>
+      <circle cx="-8" cy="-2" r="3" fill="#1c58a8"/>
+      <circle cx="10" cy="-2" r="3" fill="#1c58a8"/>
+      <path d="M-10 12 C-3 18, 5 18, 12 12" stroke="#1557a0" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>

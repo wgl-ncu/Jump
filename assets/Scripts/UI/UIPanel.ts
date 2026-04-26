@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, UITransform, Size, tween, Vec3 } from 'cc';
+import { _decorator, Component, Node, UITransform, Size, tween, Tween, Vec3 } from 'cc';
 import { UILayer, UIFrame } from './UIFrame';
 
 const { ccclass, property } = _decorator;
@@ -81,6 +81,7 @@ export class UIPanel extends Component {
 
     /** 播放打开动画 */
     protected playOpenAnimation(): void {
+        Tween.stopAllByTarget(this.node);
         // 默认：从缩小状态恢复
         this.node.setScale(0.9, 0.9, 1);
         tween(this.node)
@@ -90,6 +91,7 @@ export class UIPanel extends Component {
 
     /** 播放关闭动画 */
     protected playCloseAnimation(): void {
+        Tween.stopAllByTarget(this.node);
         tween(this.node)
             .to(0.15, { scale: new Vec3(0.9, 0.9, 1) }, { easing: 'backIn' })
             .call(() => {

@@ -1,0 +1,17 @@
+Export docs/magnetic-field-overlay-source.svg to a transparent PNG named:
+
+MagneticFieldOverlay.png
+
+Then place it in this folder:
+
+assets/resources/Art/Map/
+
+Cocos Creator should import it as:
+
+assets/resources/Art/Map/MagneticFieldOverlay.png
+
+The runtime loads:
+
+resources.load('Art/Map/MagneticFieldOverlay/spriteFrame')
+
+Recommended export size: 720 x 1400, transparent background.
