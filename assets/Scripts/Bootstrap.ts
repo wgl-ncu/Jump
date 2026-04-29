@@ -1,4 +1,5 @@
 import { _decorator, Component, director, Director, view, ResolutionPolicy, log, warn, error, Node } from 'cc';
+import { AdManager, AdType, MockAdPlatform } from './Ad';
 import { SceneBuilder } from './SceneBuilder';
 import { GameManager } from './GameManager';
 import { UIFrame } from './UI/UIFrame';
@@ -60,6 +61,9 @@ export class Bootstrap extends Component {
         const ok = await this.loadConfigData();
         if (!ok) return;
 
+        // 编辑器 / 浏览器预览下初始化 Mock 广告，便于直接调试激励流程。
+        this.initAds();
+
         // 注册 UI 预制体
         this.registerPrefabs();
 
@@ -84,10 +88,34 @@ export class Bootstrap extends Component {
         }
     }
 
+    private initAds(): void {
+        const wxApi = (globalThis as any).wx;
+        const isWeChatMiniGame = typeof wxApi?.createRewardedVideoAd === 'function';
+        if (isWeChatMiniGame) {
+            return;
+        }
+
+        AdManager.getInstance().init({
+            adUnits: {
+                power: {
+                    type: AdType.RewardedVideo,
+                    adUnitId: 'mock-rewarded-power',
+                },
+                revive: {
+                    type: AdType.RewardedVideo,
+                    adUnitId: 'mock-rewarded-revive',
+                },
+            },
+        }, new MockAdPlatform());
+
+        log(`${Bootstrap.TAG} 非微信环境已切换到 MockAdPlatform`);
+    }
+
     private registerPrefabs() {
         UIFrame.getInstance().registerPrefab('MainUI', 'Prefabs/UI/MainUI');
         UIFrame.getInstance().registerPrefab('BattleUI', 'Prefabs/UI/BattleUI');
         UIFrame.getInstance().registerPrefab('GameOverUI', 'Prefabs/UI/GameOverUI');
+        UIFrame.getInstance().registerPrefab('CommonPopUI', 'Prefabs/UI/CommonPopUI');
     }
 
     private onSceneLaunched = () => {

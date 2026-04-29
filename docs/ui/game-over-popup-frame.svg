@@ -1,0 +1,67 @@
+<svg width="720" height="1280" viewBox="0 0 720 1280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="panelFill" x1="360" y1="238" x2="360" y2="1042" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9EA"/>
+      <stop offset="1" stop-color="#FFEACC"/>
+    </linearGradient>
+    <linearGradient id="panelStroke" x1="102" y1="238" x2="618" y2="1042" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF9A4C"/>
+      <stop offset="0.52" stop-color="#FFD979"/>
+      <stop offset="1" stop-color="#76D7FF"/>
+    </linearGradient>
+    <linearGradient id="panelInner" x1="360" y1="274" x2="360" y2="1006" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.68"/>
+      <stop offset="1" stop-color="#FFF8E8" stop-opacity="0.34"/>
+    </linearGradient>
+    <linearGradient id="titleFill" x1="360" y1="278" x2="360" y2="394" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF6DF"/>
+      <stop offset="1" stop-color="#FFECC9"/>
+    </linearGradient>
+    <linearGradient id="scoreFill" x1="360" y1="444" x2="360" y2="718" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFBEA"/>
+      <stop offset="1" stop-color="#FFE7A9"/>
+    </linearGradient>
+    <linearGradient id="recordStroke" x1="174" y1="0" x2="546" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF945C"/>
+      <stop offset="0.5" stop-color="#FFC96B"/>
+      <stop offset="1" stop-color="#6FCBFF"/>
+    </linearGradient>
+    <linearGradient id="primaryFill" x1="360" y1="832" x2="360" y2="948" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD95A"/>
+      <stop offset="1" stop-color="#FF9A39"/>
+    </linearGradient>
+    <linearGradient id="secondaryFill" x1="360" y1="958" x2="360" y2="1050" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF4"/>
+      <stop offset="1" stop-color="#FFE7BF"/>
+    </linearGradient>
+    <filter id="shadowLg" x="54" y="196" width="612" height="900" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="26"/>
+      <feGaussianBlur stdDeviation="24"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.055 0 0 0 0 0.113 0 0 0 0 0.204 0 0 0 0.32 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+    </filter>
+    <filter id="warmGlow" x="96" y="286" width="136" height="136" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur_0_1"/>
+    </filter>
+    <filter id="coolGlow" x="488" y="286" width="136" height="136" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur_0_1"/>
+    </filter>
+  </defs>
+
+  <g id="Mask">
+    <rect width="720" height="1280" fill="#08111E" fill-opacity="0.34"/>
+  </g>
+
+  <g id="PopupFrame" filter="url(#shadowLg)">
+    <rect x="102" y="238" width="516" height="804" rx="56" fill="url(#panelFill)"/>
+    <rect x="106" y="242" width="508" height="796" rx="52" stroke="url(#panelStroke)" stroke-width="8"/>
+    <rect x="130" y="270" width="460" height="736" rx="40" fill="url(#panelInner)"/>
+  </g>
+</svg>

@@ -8,11 +8,13 @@
  */
 
 export { AdManager } from './AdManager';
-export { IAdPlatform } from './IAdPlatform';
+export type { IAdPlatform } from './IAdPlatform';
 export { WeChatAdPlatform } from './WeChatAdPlatform';
 export { MockAdPlatform } from './MockAdPlatform';
 export {
     AdType,
+} from './AdTypes';
+export type {
     IAdConfig,
     IAdUnitConfig,
     IAdError,

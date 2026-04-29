@@ -9,6 +9,9 @@
           "miniGame": {
             "astc_6x6": {
               "quality": "medium"
+            },
+            "png": {
+              "quality": 80
             }
           }
         },
@@ -16,6 +19,9 @@
           "wechatgame": {
             "astc_6x6": {
               "quality": "medium"
+            },
+            "png": {
+              "quality": 80
             }
           }
         }

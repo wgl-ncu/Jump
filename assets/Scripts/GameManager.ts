@@ -6,7 +6,9 @@ import { InvincibleItem } from './InvincibleItem';
 import { DashItem } from './DashItem';
 import { BonusPortalItem } from './BonusPortalItem';
 import { ObstacleSpawner } from './ObstacleSpawner';
+import { PowerManager } from './PowerManager';
 import { UIManager } from './UIManager';
+import { UIFrame } from './UI/UIFrame';
 import { SceneBuilder } from './SceneBuilder';
 import { MagneticZoneManager } from './MagneticZoneManager';
 const { ccclass, property } = _decorator;
@@ -147,7 +149,14 @@ export class GameManager extends Component {
     private bindUIEvents() {
         if (this.uiManager) {
             this.uiManager.onStartClicked = () => this.startGame();
-            this.uiManager.onRestartClicked = () => this.restartGame();
+            this.uiManager.onRestartClicked = () => {
+                if (!PowerManager.getInstance().tryConsumeForGame()) {
+                    UIFrame.getInstance().toast('体力不足，至少需要 5 点');
+                    return;
+                }
+
+                this.restartGame();
+            };
             this.uiManager.onBackToMainClicked = () => this.backToMain();
         }
     }
@@ -273,6 +282,8 @@ export class GameManager extends Component {
      * 同步各系统数据
      */
     private syncSystems() {
+        const currentScrollSpeed = this.obstacleSpawner?.getCurrentSpeed() || 300;
+
         // 同步分数到生成器
         if (this.obstacleSpawner) {
             this.obstacleSpawner.setScore(this._score);
@@ -287,7 +298,11 @@ export class GameManager extends Component {
         // 同步分数和速度到磁场区域管理器
         if (this.magneticZoneManager) {
             this.magneticZoneManager.setScore(this._score);
-            this.magneticZoneManager.setScrollSpeed(this.obstacleSpawner?.getCurrentSpeed() || 300);
+            this.magneticZoneManager.setScrollSpeed(currentScrollSpeed);
+        }
+
+        if (this._sceneBuilder) {
+            this._sceneBuilder.setCloudDriftReferenceSpeed(currentScrollSpeed);
         }
 
         // 同步反转系数到玩家

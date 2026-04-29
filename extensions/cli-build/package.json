@@ -1,0 +1,15 @@
+{
+    "name": "cli-build",
+    "version": "1.0.0",
+    "description": "HTTP server for triggering builds from CLI while editor is running",
+    "main": "./main.js",
+    "author": "Agent",
+    "editor": ">=3.8.0",
+    "contributions": {
+        "messages": {
+            "build": {
+                "methods": ["build"]
+            }
+        }
+    }
+}

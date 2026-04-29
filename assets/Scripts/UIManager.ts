@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Label, Color, UITransform, Size, Overflow, HorizontalTextAlignment, ScrollView, instantiate } from 'cc';
+import { _decorator, Button, Component, Node, Label, Color, UITransform, Size, Overflow, HorizontalTextAlignment, ScrollView, instantiate } from 'cc';
 import { MagneticPole } from './Player';
 import { TextManager } from './Data/TextManager';
 import { TextId } from './Data/TextId';
@@ -194,12 +194,12 @@ export class UIManager extends Component {
         this.bestScoreLabel = panel.getBestScoreLabel();
 
         const restartButton = panel.getRestartButton();
-        restartButton?.node.off(Node.EventType.TOUCH_END, this.handleRestartPressed, this);
-        restartButton?.node.on(Node.EventType.TOUCH_END, this.handleRestartPressed, this);
+        restartButton?.node.off(Button.EventType.CLICK, this.handleRestartPressed, this);
+        restartButton?.node.on(Button.EventType.CLICK, this.handleRestartPressed, this);
 
         const backButton = panel.getBackButton();
-        backButton?.node.off(Node.EventType.TOUCH_END, this.handleBackToMainPressed, this);
-        backButton?.node.on(Node.EventType.TOUCH_END, this.handleBackToMainPressed, this);
+        backButton?.node.off(Button.EventType.CLICK, this.handleBackToMainPressed, this);
+        backButton?.node.on(Button.EventType.CLICK, this.handleBackToMainPressed, this);
     }
 
     private lockGameOverInput() {
@@ -247,7 +247,7 @@ export class UIManager extends Component {
         this._fieldStatusLabel.string = '';
         this._fieldStatusLabel.fontSize = 18;
         this._fieldStatusLabel.lineHeight = 18;
-        this._fieldStatusLabel.color = new Color(180, 80, 255, 0);  // 初始透明
+        this._fieldStatusLabel.color = new Color(180, 80, 255, 0);
         this._fieldStatusLabel.overflow = Overflow.NONE;
         this._fieldStatusLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
     }

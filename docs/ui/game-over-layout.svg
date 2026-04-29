@@ -1,0 +1,165 @@
+<svg width="720" height="1280" viewBox="0 0 720 1280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="360" y1="0" x2="360" y2="1280" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#75C9FF"/>
+      <stop offset="1" stop-color="#D9F3FF"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="360" y1="72" x2="360" y2="1208" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#143A5A" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#143A5A" stop-opacity="0.42"/>
+    </linearGradient>
+    <linearGradient id="panelFill" x1="360" y1="176" x2="360" y2="1064" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9E8"/>
+      <stop offset="1" stop-color="#FFEED0"/>
+    </linearGradient>
+    <linearGradient id="panelStroke" x1="96" y1="176" x2="624" y2="1064" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF9A3E"/>
+      <stop offset="1" stop-color="#FFCE6A"/>
+    </linearGradient>
+    <linearGradient id="warm" x1="136" y1="0" x2="136" y2="1">
+      <stop stop-color="#FFB04D"/>
+      <stop offset="1" stop-color="#FF5D4A"/>
+    </linearGradient>
+    <linearGradient id="cool" x1="136" y1="0" x2="136" y2="1">
+      <stop stop-color="#7BE6FF"/>
+      <stop offset="1" stop-color="#3D8DFF"/>
+    </linearGradient>
+    <linearGradient id="primaryBtn" x1="360" y1="804" x2="360" y2="924" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD95E"/>
+      <stop offset="1" stop-color="#FF9A38"/>
+    </linearGradient>
+    <linearGradient id="secondaryBtn" x1="360" y1="940" x2="360" y2="1040" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF7E7"/>
+      <stop offset="1" stop-color="#FFE5BB"/>
+    </linearGradient>
+    <linearGradient id="scoreGlow" x1="360" y1="354" x2="360" y2="664" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF7C5"/>
+      <stop offset="1" stop-color="#FFD46F"/>
+    </linearGradient>
+    <linearGradient id="recordBar" x1="168" y1="0" x2="552" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8D52"/>
+      <stop offset="0.48" stop-color="#FFC768"/>
+      <stop offset="1" stop-color="#73DFFF"/>
+    </linearGradient>
+    <filter id="shadowLg" x="32" y="120" width="656" height="992" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+      <feOffset dy="24"/>
+      <feGaussianBlur stdDeviation="24"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0784314 0 0 0 0 0.180392 0 0 0 0 0.278431 0 0 0 0.28 0"/>
+      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
+    </filter>
+    <filter id="glowWarm" x="0" y="0" width="220" height="220" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur_0_1"/>
+    </filter>
+    <filter id="glowCool" x="0" y="0" width="220" height="220" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur_0_1"/>
+    </filter>
+  </defs>
+
+  <g id="Backdrop">
+    <rect width="720" height="1280" fill="url(#sky)"/>
+    <rect width="720" height="1280" fill="#0A2035" fill-opacity="0.18"/>
+
+    <ellipse cx="125" cy="148" rx="90" ry="28" fill="#FFFFFF" fill-opacity="0.36"/>
+    <ellipse cx="596" cy="228" rx="112" ry="34" fill="#FFFFFF" fill-opacity="0.28"/>
+    <ellipse cx="596" cy="942" rx="94" ry="26" fill="#FFFFFF" fill-opacity="0.2"/>
+    <ellipse cx="160" cy="1012" rx="120" ry="30" fill="#FFFFFF" fill-opacity="0.18"/>
+
+    <path d="M68 926C156 918 188 860 248 852C307 845 348 895 412 900C475 905 522 864 612 862" stroke="#FFFFFF" stroke-opacity="0.16" stroke-width="20" stroke-linecap="round"/>
+    <path d="M118 326C176 300 221 257 295 270C369 283 426 345 496 343C566 341 609 302 646 271" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="14" stroke-linecap="round"/>
+
+    <circle cx="104" cy="305" r="7" fill="#FFE671"/>
+    <circle cx="146" cy="268" r="4" fill="#FFFFFF"/>
+    <circle cx="617" cy="344" r="6" fill="#9CEFFF"/>
+    <circle cx="563" cy="307" r="4" fill="#FFFFFF"/>
+    <circle cx="593" cy="996" r="5" fill="#FFE671"/>
+  </g>
+
+  <g id="ThemeBadges">
+    <g transform="translate(52 96)">
+      <g filter="url(#glowWarm)">
+        <rect x="22" y="22" width="116" height="116" rx="34" fill="#FF6F55" fill-opacity="0.38"/>
+      </g>
+      <rect x="30" y="30" width="100" height="100" rx="28" fill="url(#warm)" stroke="#FFF2B7" stroke-width="6"/>
+      <text x="80" y="99" text-anchor="middle" fill="#FFF8E2" font-size="60" font-weight="900" font-family="YouSheBiaoTiHei, 'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">N</text>
+    </g>
+    <g transform="translate(532 80)">
+      <g filter="url(#glowCool)">
+        <rect x="22" y="22" width="116" height="116" rx="34" fill="#4CA9FF" fill-opacity="0.34"/>
+      </g>
+      <rect x="30" y="30" width="100" height="100" rx="28" fill="url(#cool)" stroke="#D5FBFF" stroke-width="6"/>
+      <text x="80" y="99" text-anchor="middle" fill="#F6FDFF" font-size="60" font-weight="900" font-family="YouSheBiaoTiHei, 'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">S</text>
+    </g>
+  </g>
+
+  <g id="GameOverUI" filter="url(#shadowLg)">
+    <rect x="96" y="176" width="528" height="888" rx="52" fill="url(#panelFill)"/>
+    <rect x="100" y="180" width="520" height="880" rx="48" stroke="url(#panelStroke)" stroke-width="8"/>
+    <rect x="122" y="202" width="476" height="836" rx="40" fill="url(#overlay)" fill-opacity="0.08"/>
+
+    <g id="TopPart">
+      <g id="TitleRibbon">
+        <rect x="166" y="214" width="388" height="112" rx="32" fill="#FFF6DB" stroke="#FFB85C" stroke-width="6"/>
+        <path d="M166 270C206 243 246 243 286 270" stroke="#FF7A59" stroke-width="10" stroke-linecap="round" opacity="0.8"/>
+        <path d="M434 270C474 243 514 243 554 270" stroke="#4BAEFF" stroke-width="10" stroke-linecap="round" opacity="0.8"/>
+        <circle cx="194" cy="246" r="16" fill="#FF7A59"/>
+        <circle cx="526" cy="246" r="16" fill="#4BAEFF"/>
+        <text x="360" y="268" text-anchor="middle" fill="#FF8A35" font-size="50" font-weight="900" letter-spacing="4" font-family="YouSheBiaoTiHei, 'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">挑战结束</text>
+        <text x="360" y="306" text-anchor="middle" fill="#4D6E8E" font-size="20" font-weight="700" letter-spacing="2" font-family="'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">磁场失稳 · 再吸一局</text>
+      </g>
+
+      <g id="CurPoint">
+        <circle cx="360" cy="480" r="148" fill="#FFF6D8"/>
+        <circle cx="360" cy="480" r="134" fill="url(#scoreGlow)" stroke="#FFF3D2" stroke-width="10"/>
+        <path d="M269 408C294 378 330 360 360 360C390 360 426 378 451 408" stroke="#FFF8E8" stroke-width="14" stroke-linecap="round" opacity="0.7"/>
+        <text x="360" y="418" text-anchor="middle" fill="#5D7591" font-size="28" font-weight="800" letter-spacing="4" font-family="'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">本局得分</text>
+        <text x="360" y="530" text-anchor="middle" fill="#FF7E4C" font-size="120" font-weight="900" font-family="YouSheBiaoTiHei, 'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">128</text>
+        <text x="360" y="584" text-anchor="middle" fill="#67809D" font-size="24" font-weight="700" font-family="'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">连续跨越 18 个平台</text>
+      </g>
+
+      <g id="RecordPoint">
+        <rect x="168" y="650" width="384" height="108" rx="30" fill="#FFF9EE"/>
+        <rect x="172" y="654" width="376" height="100" rx="26" stroke="url(#recordBar)" stroke-width="8"/>
+        <circle cx="214" cy="704" r="24" fill="#FF9C53"/>
+        <path d="M214 686L219.562 697.271L232 699.079L223 707.851L225.124 720.221L214 714.371L202.876 720.221L205 707.851L196 699.079L208.438 697.271L214 686Z" fill="#FFF9E4"/>
+        <text x="264" y="695" fill="#617A96" font-size="22" font-weight="800" letter-spacing="2" font-family="'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">历史最佳</text>
+        <text x="264" y="730" fill="#233E56" font-size="42" font-weight="900" font-family="YouSheBiaoTiHei, 'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">256</text>
+        <text x="490" y="714" text-anchor="end" fill="#4DAEFF" font-size="20" font-weight="800" font-family="'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">再冲一次</text>
+      </g>
+    </g>
+
+    <g id="MidDecor">
+      <path d="M146 802C206 768 248 770 302 802" stroke="#FFB65A" stroke-opacity="0.34" stroke-width="8" stroke-linecap="round"/>
+      <path d="M418 802C472 770 514 768 574 802" stroke="#6ECFFF" stroke-opacity="0.34" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="220" cy="806" r="6" fill="#FF9C4A"/>
+      <circle cx="500" cy="806" r="6" fill="#45B4FF"/>
+    </g>
+
+    <g id="BtnGroup">
+      <g id="OnceAgain">
+        <rect x="146" y="812" width="428" height="116" rx="34" fill="#FF7B39"/>
+        <rect x="146" y="804" width="428" height="116" rx="34" fill="url(#primaryBtn)" stroke="#FFF1B5" stroke-width="8"/>
+        <circle cx="204" cy="862" r="22" fill="#FF7358" opacity="0.95"/>
+        <circle cx="516" cy="862" r="22" fill="#43B6FF" opacity="0.95"/>
+        <text x="360" y="878" text-anchor="middle" fill="#FFFDF4" font-size="46" font-weight="900" letter-spacing="3" font-family="YouSheBiaoTiHei, 'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">再来一次</text>
+      </g>
+
+      <g id="BackToMainBtn">
+        <rect x="176" y="950" width="368" height="96" rx="30" fill="#F5FBFF"/>
+        <rect x="176" y="950" width="368" height="96" rx="30" stroke="#FFB05B" stroke-width="6"/>
+        <path d="M216 999H504" stroke="#B3DFFF" stroke-width="6" stroke-linecap="round" opacity="0.45"/>
+        <text x="360" y="1013" text-anchor="middle" fill="#FF9A3B" font-size="38" font-weight="900" letter-spacing="2" font-family="YouSheBiaoTiHei, 'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">返回主页</text>
+      </g>
+    </g>
+
+    <g id="FooterTips">
+      <text x="360" y="1098" text-anchor="middle" fill="#67809D" font-size="20" font-weight="700" letter-spacing="2" font-family="'Alibaba PuHuiTi', 'Microsoft YaHei', sans-serif">顶部成绩区 + 底部双按钮，适合直接映射到当前预制体</text>
+    </g>
+  </g>
+</svg>

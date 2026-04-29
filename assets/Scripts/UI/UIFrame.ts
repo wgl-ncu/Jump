@@ -218,7 +218,7 @@ export class UIFrame extends Component {
     private finishOpen(panelPath: string, panelNode: Node, options: UIPanelOptions): void {
         const { cache = true, modal = false, maskAlpha = 160, data = null, onOpened, onClosed } = options;
 
-        const panelComp = (panelNode.getComponent(panelPath) as any) || (panelNode.getComponent('UIPanel') as any);
+        const panelComp = this.getPanelComponent(panelNode, panelPath);
         const targetLayer = (panelComp?.layer as UILayer | undefined) ?? UILayer.Panel;
 
         // 模态遮罩
@@ -273,7 +273,7 @@ export class UIFrame extends Component {
         const { panelPath, node, options } = entry;
 
         // 通知面板关闭
-        const panelComp = node.getComponent('UIPanel') as any;
+        const panelComp = this.getPanelComponent(node, panelPath);
         if (panelComp && panelComp.onPanelClose) {
             panelComp.onPanelClose();
         }
@@ -311,7 +311,7 @@ export class UIFrame extends Component {
     public closeAll(): void {
         while (this._panelStack.length > 0) {
             const entry = this._panelStack.pop()!;
-            const panelComp = entry.node.getComponent('UIPanel') as any;
+            const panelComp = this.getPanelComponent(entry.node, entry.panelPath);
             if (panelComp && panelComp.onPanelClose) {
                 panelComp.onPanelClose();
             }
@@ -346,6 +346,10 @@ export class UIFrame extends Component {
     /** 面板栈是否为空 */
     public isPanelStackEmpty(): boolean {
         return this._panelStack.length === 0;
+    }
+
+    private getPanelComponent(node: Node, panelPath: string): any {
+        return (node.getComponent(panelPath) as any) || (node.getComponent('UIPanel') as any);
     }
 
     // ==================== 面板创建 ====================

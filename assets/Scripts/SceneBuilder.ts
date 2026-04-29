@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, UITransform, Size, Sprite, Color, Label, Graphics, Canvas, Button, Overflow, HorizontalTextAlignment, VerticalTextAlignment, ScrollView, resources, Prefab, instantiate } from 'cc';
+import { _decorator, Component, Node, UITransform, Size, Sprite, SpriteFrame, Color, Label, Graphics, Canvas, Overflow, HorizontalTextAlignment, UIOpacity, resources, Prefab, instantiate } from 'cc';
 import { Player, MagneticPole } from './Player';
 import { ObstacleSpawner } from './ObstacleSpawner';
 import { UIManager } from './UIManager';
@@ -7,6 +7,15 @@ import { MagneticZoneManager } from './MagneticZoneManager';
 import { TextManager } from './Data/TextManager';
 import { TextId } from './Data/TextId';
 const { ccclass } = _decorator;
+
+type CloudDriftState = {
+    node: Node;
+    baseX: number;
+    baseSpeed: number;
+    swayAmplitude: number;
+    swayFrequency: number;
+    phase: number;
+};
 
 /**
  * 场景构建器 - 纵向卷轴版
@@ -21,6 +30,15 @@ const { ccclass } = _decorator;
  */
 @ccclass('SceneBuilder')
 export class SceneBuilder extends Component {
+    private static readonly CLOUD_SPEED_REFERENCE = 300;
+
+    private static readonly BACKGROUND_PATH = 'Art/UI/BattleBG1/spriteFrame';
+    private static readonly CLOUD_CONFIGS = [
+        { name: 'CloudN1', path: 'Art/UI/CloudN1_resized/spriteFrame', width: 176, startX: -165, startY: -500, speed: 11, swayAmplitude: 12, swayFrequency: 0.28, opacity: 205, scale: 0.96 },
+        { name: 'CloudN2', path: 'Art/UI/CloudN2_resized/spriteFrame', width: 330, startX: 165, startY: -140, speed: 15, swayAmplitude: 18, swayFrequency: 0.2, opacity: 170, scale: 1 },
+        { name: 'CloudS1', path: 'Art/UI/CloudS1_resized/spriteFrame', width: 192, startX: 148, startY: 250, speed: 18, swayAmplitude: 15, swayFrequency: 0.24, opacity: 220, scale: 0.92 },
+        { name: 'CloudS2', path: 'Art/UI/CloudS2_resized/spriteFrame', width: 344, startX: -152, startY: 560, speed: 13, swayAmplitude: 14, swayFrequency: 0.18, opacity: 176, scale: 1.02 },
+    ] as const;
 
     private readonly DESIGN_HEIGHT = 1280;
     private readonly DESIGN_WIDTH = 720;
@@ -40,11 +58,9 @@ export class SceneBuilder extends Component {
     /** 玩家预制体（从resources加载） */
     private _playerPrefab: Prefab | null = null;
 
-    /** 结算界面预制体（从resources加载） */
-    private _gameOverPrefab: Prefab | null = null;
-
-    /** 战斗界面预制体（从resources加载） */
-    private _battleUIPrefab: Prefab | null = null;
+    private _cloudDriftStates: CloudDriftState[] = [];
+    private _cloudElapsed: number = 0;
+    private _cloudSpeedScale: number = 1;
 
     // 引用
     private _player: Player | null = null;
@@ -62,25 +78,35 @@ export class SceneBuilder extends Component {
                     this._playerPrefab = prefab;
                 }
 
-                resources.load('Prefabs/UI/GameOverUI', Prefab, (gameOverErr, gameOverPrefab) => {
-                    if (gameOverErr) {
-                        console.warn('加载结算界面预制体失败，使用代码创建:', gameOverErr);
-                    } else {
-                        this._gameOverPrefab = gameOverPrefab;
-                    }
-
-                    resources.load('Prefabs/UI/BattleUI', Prefab, (battleUiErr, battleUiPrefab) => {
-                        if (battleUiErr) {
-                            console.warn('加载战斗界面预制体失败，使用代码创建:', battleUiErr);
-                        } else {
-                            this._battleUIPrefab = battleUiPrefab;
-                        }
-
-                        this.buildScene();
-                        this._built = true;
-                    });
-                });
+                this.buildScene();
+                this._built = true;
             });
+        }
+    }
+
+    update(dt: number) {
+        if (this._cloudDriftStates.length === 0) {
+            return;
+        }
+
+        this._cloudElapsed += dt;
+
+        const wrapTop = this.DESIGN_HEIGHT / 2 + 150;
+        const wrapBottom = -this.DESIGN_HEIGHT / 2 - 150;
+
+        this._cloudDriftStates = this._cloudDriftStates.filter((cloudState) => cloudState.node.isValid);
+
+        for (const cloudState of this._cloudDriftStates) {
+            const currentPosition = cloudState.node.position;
+            const cloudSpeed = cloudState.baseSpeed * this._cloudSpeedScale;
+            let nextY = currentPosition.y + cloudSpeed * dt;
+
+            if (nextY > wrapTop) {
+                nextY = wrapBottom;
+            }
+
+            const nextX = cloudState.baseX + Math.sin(this._cloudElapsed * cloudState.swayFrequency + cloudState.phase) * cloudState.swayAmplitude;
+            cloudState.node.setPosition(nextX, nextY, currentPosition.z);
         }
     }
 
@@ -97,11 +123,55 @@ export class SceneBuilder extends Component {
         const uiTransform = this.node.getComponent(UITransform) || this.node.addComponent(UITransform);
         uiTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
 
+        this.createBackgroundLayer();
         this.createMagneticFieldLayer();
         this.createMagneticZoneLayer();
         this.createGameLayer();
         this.createObstacleLayer();
         this.createUILayer();
+    }
+
+    private createBackgroundLayer() {
+        const backgroundLayer = this.createNode('BackgroundLayer', this.node);
+        backgroundLayer.addComponent(UITransform).setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
+
+        const backgroundNode = this.createSpriteNode('BattleBG', backgroundLayer, this.DESIGN_WIDTH, this.DESIGN_HEIGHT);
+        this.loadSpriteFrame(backgroundNode.getComponent(Sprite)!, SceneBuilder.BACKGROUND_PATH);
+
+        const cloudLayer = this.createNode('CloudLayer', backgroundLayer);
+        cloudLayer.addComponent(UITransform).setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
+
+        this._cloudDriftStates = [];
+
+        SceneBuilder.CLOUD_CONFIGS.forEach((config, index) => {
+            const cloudNode = this.createSpriteNode(config.name, cloudLayer, config.width, 120);
+            cloudNode.setPosition(config.startX, config.startY, 0);
+
+            const opacity = cloudNode.addComponent(UIOpacity);
+            opacity.opacity = config.opacity;
+
+            const sprite = cloudNode.getComponent(Sprite)!;
+            sprite.sizeMode = Sprite.SizeMode.TRIMMED;
+            this.loadSpriteFrame(sprite, config.path, (spriteFrame) => {
+                const trimmedSize = spriteFrame.rect;
+                const uiTransform = cloudNode.getComponent(UITransform);
+                if (!uiTransform || trimmedSize.width <= 0 || trimmedSize.height <= 0) {
+                    return;
+                }
+
+                const scale = Math.min(1, (config.width / trimmedSize.width) * config.scale);
+                cloudNode.setScale(scale, scale, 1);
+            });
+
+            this._cloudDriftStates.push({
+                node: cloudNode,
+                baseX: config.startX,
+                baseSpeed: config.speed,
+                swayAmplitude: config.swayAmplitude,
+                swayFrequency: config.swayFrequency,
+                phase: index * 1.13,
+            });
+        });
     }
 
     /**
@@ -269,329 +339,43 @@ export class SceneBuilder extends Component {
         this._uiManager = uiManager;
     }
 
-    private createBattleUIView(parent: Node): {
-        root: Node | null;
-        scoreLabel: Label | null;
-        poleLabel: Label | null;
-        poleNIcon: Node | null;
-        poleSIcon: Node | null;
-        livesScrollView: ScrollView | null;
-    } {
-        if (!this._battleUIPrefab) {
-            return this.createFallbackBattleUIView(parent);
-        }
-
-        const battleRoot = instantiate(this._battleUIPrefab);
-        battleRoot.name = 'BattleUI';
-        battleRoot.setParent(parent);
-        battleRoot.setPosition(0, 0, 0);
-        battleRoot.setScale(1, 1, 1);
-
-        const battleCanvas = battleRoot.getComponent(Canvas);
-        if (battleCanvas) {
-            battleCanvas.destroy();
-        }
-
-        const rootTransform = battleRoot.getComponent(UITransform) || battleRoot.addComponent(UITransform);
-        rootTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
-
-        const scoreNode = this.findChildByPath(battleRoot, ['Top', 'Point']);
-        const nNode = this.findChildByPath(battleRoot, ['Top', 'NSTip', 'N']);
-        const sNode = this.findChildByPath(battleRoot, ['Top', 'NSTip', 'S']);
-        const heartsNode = this.findChildByPath(battleRoot, ['Top', 'Heart', 'HeartsSV']);
-
-        const scoreLabel = scoreNode?.getComponent(Label) || null;
-        const livesScrollView = heartsNode?.getComponent(ScrollView) || null;
-
-        if (!scoreLabel || !nNode || !sNode || !livesScrollView) {
-            battleRoot.destroy();
-            console.warn('BattleUI 预制体缺少战斗UI所需控件，回退为代码创建界面');
-            return this.createFallbackBattleUIView(parent);
-        }
-
-        return {
-            root: battleRoot,
-            scoreLabel,
-            poleLabel: null,
-            poleNIcon: nNode,
-            poleSIcon: sNode,
-            livesScrollView,
-        };
-    }
-
-    private createFallbackBattleUIView(parent: Node): {
-        root: Node | null;
-        scoreLabel: Label | null;
-        poleLabel: Label | null;
-        poleNIcon: Node | null;
-        poleSIcon: Node | null;
-        livesScrollView: ScrollView | null;
-    } {
-        const scoreNode = this.createNode('ScoreLabel', parent);
-        scoreNode.setPosition(0, this.DESIGN_HEIGHT / 2 - 80, 0);
-        const scoreLabel = scoreNode.addComponent(Label);
-        scoreLabel.string = '0';
-        scoreLabel.fontSize = 48;
-        scoreLabel.lineHeight = 48;
-        scoreLabel.color = new Color(255, 255, 255, 255);
-        scoreLabel.overflow = Overflow.NONE;
-        scoreLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
-        scoreNode.getComponent(UITransform)!.setContentSize(new Size(200, 60));
-
-        const poleNode = this.createNode('PoleIndicator', parent);
-        poleNode.setPosition(-280, this.DESIGN_HEIGHT / 2 - 80, 0);
-        const poleIndicator = poleNode.addComponent(Label);
-        poleIndicator.string = 'N';
-        poleIndicator.fontSize = 36;
-        poleIndicator.lineHeight = 36;
-        poleIndicator.color = new Color(255, 80, 80, 255);
-        poleIndicator.overflow = Overflow.NONE;
-        poleIndicator.horizontalAlign = HorizontalTextAlignment.CENTER;
-        poleNode.getComponent(UITransform)!.setContentSize(new Size(60, 50));
-
-        return {
-            root: null,
-            scoreLabel,
-            poleLabel: poleIndicator,
-            poleNIcon: null,
-            poleSIcon: null,
-            livesScrollView: null,
-        };
-    }
-
-    private createGameOverPanelView(parent: Node): {
-        panel: Node;
-        finalScoreLabel: Label | null;
-        bestScoreLabel: Label | null;
-        restartButton: Node | null;
-        backButton: Node | null;
-    } {
-        const prefabView = this.createGameOverPanelFromPrefab(parent);
-        if (prefabView) {
-            return prefabView;
-        }
-
-        return this.createFallbackGameOverPanel(parent);
-    }
-
-    private createGameOverPanelFromPrefab(parent: Node): {
-        panel: Node;
-        finalScoreLabel: Label | null;
-        bestScoreLabel: Label | null;
-        restartButton: Node | null;
-        backButton: Node | null;
-    } | null {
-        if (!this._gameOverPrefab) {
-            return null;
-        }
-
-        const panel = instantiate(this._gameOverPrefab);
-        panel.name = 'GameOverPanel';
-        panel.setParent(parent);
-        panel.setPosition(0, 0, 0);
-        panel.setScale(1, 1, 1);
-        panel.active = false;
-
-        const panelCanvas = panel.getComponent(Canvas);
-        if (panelCanvas) {
-            panelCanvas.destroy();
-        }
-
-        const panelTransform = panel.getComponent(UITransform) || panel.addComponent(UITransform);
-        panelTransform.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
-
-        const allButtons = panel.getComponentsInChildren(Button);
-        const restartButton = this.findButtonNode(panel, allButtons, ['once', 'again', 'restart', 'retry', 'try']);
-        const remainingButtons = allButtons.filter((button) => button.node !== restartButton);
-        const backButton = this.findButtonNode(panel, remainingButtons, ['back', 'home', 'main']);
-
-        const nonButtonLabels = panel.getComponentsInChildren(Label).filter((label) => !this.hasButtonAncestor(label.node, panel));
-        const finalScoreLabel = this.findLabelNode(nonButtonLabels, ['final', 'current', 'score', 'result', 'point']);
-        const remainingLabels = nonButtonLabels.filter((label) => label !== finalScoreLabel);
-        const bestScoreLabel = this.findLabelNode(remainingLabels, ['best', 'high', 'record']);
-
-        if (!restartButton || !backButton || !finalScoreLabel || !bestScoreLabel) {
-            panel.destroy();
-            console.warn('GameOverUI 预制体缺少结算所需控件，回退为代码创建界面');
-            return null;
-        }
-
-        return {
-            panel,
-            finalScoreLabel,
-            bestScoreLabel,
-            restartButton,
-            backButton,
-        };
-    }
-
-    private createFallbackGameOverPanel(parent: Node): {
-        panel: Node;
-        finalScoreLabel: Label | null;
-        bestScoreLabel: Label | null;
-        restartButton: Node | null;
-        backButton: Node | null;
-    } {
-        const gameOverPanel = this.createNode('GameOverPanel', parent);
-        gameOverPanel.active = false;
-        const gopUT = gameOverPanel.addComponent(UITransform);
-        gopUT.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
-        const gopSprite = gameOverPanel.addComponent(Sprite);
-        gopSprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        gopSprite.type = Sprite.Type.SIMPLE;
-        gopSprite.color = new Color(0, 0, 0, 180);
-
-        const goTitle = this.createNode('GOTitle', gameOverPanel);
-        goTitle.setPosition(0, 160, 0);
-        const goTitleLabel = goTitle.addComponent(Label);
-        goTitleLabel.string = TextManager.getInstance().getText(TextId.GameOver);
-        goTitleLabel.fontSize = 56;
-        goTitleLabel.lineHeight = 56;
-        goTitleLabel.color = new Color(255, 100, 100, 255);
-        goTitleLabel.overflow = Overflow.NONE;
-        goTitleLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
-
-        const finalNode = this.createNode('FinalScore', gameOverPanel);
-        finalNode.setPosition(0, 60, 0);
-        const finalLabel = finalNode.addComponent(Label);
-        finalLabel.string = '0';
-        finalLabel.fontSize = 48;
-        finalLabel.lineHeight = 48;
-        finalLabel.color = new Color(255, 255, 255, 255);
-        finalLabel.overflow = Overflow.NONE;
-        finalLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
-
-        const bestTextNode = this.createNode('BestLabel', gameOverPanel);
-        bestTextNode.setPosition(0, 10, 0);
-        const bestTextLabel = bestTextNode.addComponent(Label);
-        bestTextLabel.string = TextManager.getInstance().getText(TextId.HighScore);
-        bestTextLabel.fontSize = 20;
-        bestTextLabel.lineHeight = 20;
-        bestTextLabel.color = new Color(200, 200, 200, 180);
-        bestTextLabel.overflow = Overflow.NONE;
-        bestTextLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
-
-        const bestNode = this.createNode('BestScore', gameOverPanel);
-        bestNode.setPosition(0, -20, 0);
-        const bestLabel = bestNode.addComponent(Label);
-        bestLabel.string = '0';
-        bestLabel.fontSize = 28;
-        bestLabel.lineHeight = 28;
-        bestLabel.color = new Color(255, 220, 100, 255);
-        bestLabel.overflow = Overflow.NONE;
-        bestLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
-
-        const restartBtn = this.createNode('RestartButton', gameOverPanel);
-        restartBtn.setPosition(0, -110, 0);
-        const rBtnUT = restartBtn.addComponent(UITransform);
-        rBtnUT.setContentSize(new Size(240, 60));
-        const rBtnSprite = restartBtn.addComponent(Sprite);
-        rBtnSprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        rBtnSprite.type = Sprite.Type.SIMPLE;
-        rBtnSprite.color = new Color(100, 200, 100, 255);
-        const rBtnLabelNode = this.createNode('BtnLabel', restartBtn);
-        const rBtnLabel = rBtnLabelNode.addComponent(Label);
-        rBtnLabel.string = TextManager.getInstance().getText(TextId.TryAgain);
-        rBtnLabel.fontSize = 28;
-        rBtnLabel.lineHeight = 28;
-        rBtnLabel.color = new Color(255, 255, 255, 255);
-        rBtnLabel.overflow = Overflow.NONE;
-        rBtnLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
-        const rButton = restartBtn.addComponent(Button);
-        rButton.transition = Button.Transition.COLOR;
-        rButton.normalColor = new Color(100, 200, 100, 255);
-        rButton.pressedColor = new Color(80, 160, 80, 255);
-        rButton.hoverColor = new Color(120, 220, 120, 255);
-
-        const backBtn = this.createNode('BackButton', gameOverPanel);
-        backBtn.setPosition(0, -190, 0);
-        const bBtnUT = backBtn.addComponent(UITransform);
-        bBtnUT.setContentSize(new Size(240, 60));
-        const bBtnSprite = backBtn.addComponent(Sprite);
-        bBtnSprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        bBtnSprite.type = Sprite.Type.SIMPLE;
-        bBtnSprite.color = new Color(80, 120, 200, 255);
-        const bBtnLabelNode = this.createNode('BtnLabel', backBtn);
-        const bBtnLabel = bBtnLabelNode.addComponent(Label);
-        bBtnLabel.string = TextManager.getInstance().getText(TextId.BackToHome);
-        bBtnLabel.fontSize = 28;
-        bBtnLabel.lineHeight = 28;
-        bBtnLabel.color = new Color(255, 255, 255, 255);
-        bBtnLabel.overflow = Overflow.NONE;
-        bBtnLabel.horizontalAlign = HorizontalTextAlignment.CENTER;
-        const bButton = backBtn.addComponent(Button);
-        bButton.transition = Button.Transition.COLOR;
-        bButton.normalColor = new Color(80, 120, 200, 255);
-        bButton.pressedColor = new Color(60, 90, 160, 255);
-        bButton.hoverColor = new Color(100, 140, 220, 255);
-
-        return {
-            panel: gameOverPanel,
-            finalScoreLabel: finalLabel,
-            bestScoreLabel: bestLabel,
-            restartButton: restartBtn,
-            backButton: backBtn,
-        };
-    }
-
-    private findButtonNode(root: Node, buttons: Button[], keywords: string[]): Node | null {
-        for (const button of buttons) {
-            const buttonNode = button.node;
-            const nodeName = buttonNode.name.toLowerCase();
-            if (keywords.some((keyword) => nodeName.includes(keyword))) {
-                return buttonNode;
-            }
-        }
-
-        for (const button of buttons) {
-            const buttonNode = button.node;
-            if (buttonNode !== root) {
-                return buttonNode;
-            }
-        }
-
-        return null;
-    }
-
-    private findLabelNode(labels: Label[], keywords: string[]): Label | null {
-        for (const label of labels) {
-            const nodeName = label.node.name.toLowerCase();
-            if (keywords.some((keyword) => nodeName.includes(keyword))) {
-                return label;
-            }
-        }
-
-        return labels[0] || null;
-    }
-
-    private findChildByPath(root: Node, path: string[]): Node | null {
-        let current: Node | null = root;
-        for (const name of path) {
-            current = current?.getChildByName(name) || null;
-            if (!current) {
-                return null;
-            }
-        }
-
-        return current;
-    }
-
-    private hasButtonAncestor(node: Node, root: Node): boolean {
-        let current: Node | null = node;
-        while (current && current !== root) {
-            if (current.getComponent(Button)) {
-                return true;
-            }
-            current = current.parent;
-        }
-
-        return false;
-    }
-
     private createNode(name: string, parent: Node): Node {
         const node = new Node(name);
         node.setParent(parent);
         return node;
+    }
+
+    private createSpriteNode(name: string, parent: Node, width: number, height: number): Node {
+        const node = this.createNode(name, parent);
+        const uiTransform = node.addComponent(UITransform);
+        uiTransform.setContentSize(new Size(width, height));
+
+        const sprite = node.addComponent(Sprite);
+        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        sprite.type = Sprite.Type.SIMPLE;
+
+        return node;
+    }
+
+    private loadSpriteFrame(sprite: Sprite, path: string, onLoaded?: (spriteFrame: SpriteFrame) => void) {
+        resources.load(path, SpriteFrame, (error, spriteFrame) => {
+            if (error || !spriteFrame || !sprite.node.isValid) {
+                if (error) {
+                    console.warn(`[SceneBuilder] 加载资源失败: ${path}`, error);
+                }
+                return;
+            }
+
+            sprite.spriteFrame = spriteFrame;
+            onLoaded?.(spriteFrame);
+        });
+    }
+
+    public setCloudDriftReferenceSpeed(speed: number) {
+        const safeSpeed = Number.isFinite(speed) ? Math.max(0, speed) : SceneBuilder.CLOUD_SPEED_REFERENCE;
+        this._cloudSpeedScale = SceneBuilder.CLOUD_SPEED_REFERENCE > 0
+            ? safeSpeed / SceneBuilder.CLOUD_SPEED_REFERENCE
+            : 1;
     }
 
     public getPlayer(): Player | null { return this._player; }
