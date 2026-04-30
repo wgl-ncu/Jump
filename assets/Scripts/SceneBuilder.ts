@@ -17,6 +17,41 @@ type CloudDriftState = {
     phase: number;
 };
 
+type BackgroundStar = {
+    x: number;
+    y: number;
+    radius: number;
+    alpha: number;
+    twinkle: number;
+    phase: number;
+    speed: number;
+};
+
+type BackgroundMist = {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    alpha: number;
+    speed: number;
+    swayAmplitude: number;
+    swayFrequency: number;
+    phase: number;
+    tint: Color;
+};
+
+type BackgroundFlow = {
+    x: number;
+    y: number;
+    length: number;
+    width: number;
+    alpha: number;
+    speed: number;
+    swayAmplitude: number;
+    swayFrequency: number;
+    phase: number;
+};
+
 /**
  * 场景构建器 - 纵向卷轴版
  * 
@@ -31,6 +66,9 @@ type CloudDriftState = {
 @ccclass('SceneBuilder')
 export class SceneBuilder extends Component {
     private static readonly CLOUD_SPEED_REFERENCE = 300;
+    private static readonly STAR_COUNT = 28;
+    private static readonly MIST_COUNT = 3;
+    private static readonly FLOW_COUNT = 18;
 
     private static readonly BACKGROUND_PATH = 'Art/UI/BattleBG1/spriteFrame';
     private static readonly CLOUD_CONFIGS = [
@@ -61,6 +99,12 @@ export class SceneBuilder extends Component {
     private _cloudDriftStates: CloudDriftState[] = [];
     private _cloudElapsed: number = 0;
     private _cloudSpeedScale: number = 1;
+    private _starStates: BackgroundStar[] = [];
+    private _mistStates: BackgroundMist[] = [];
+    private _flowStates: BackgroundFlow[] = [];
+    private _starGraphics: Graphics | null = null;
+    private _mistGraphics: Graphics | null = null;
+    private _flowGraphics: Graphics | null = null;
 
     // 引用
     private _player: Player | null = null;
@@ -85,7 +129,7 @@ export class SceneBuilder extends Component {
     }
 
     update(dt: number) {
-        if (this._cloudDriftStates.length === 0) {
+        if (this._cloudDriftStates.length === 0 && !this._starGraphics && !this._mistGraphics && !this._flowGraphics) {
             return;
         }
 
@@ -108,6 +152,8 @@ export class SceneBuilder extends Component {
             const nextX = cloudState.baseX + Math.sin(this._cloudElapsed * cloudState.swayFrequency + cloudState.phase) * cloudState.swayAmplitude;
             cloudState.node.setPosition(nextX, nextY, currentPosition.z);
         }
+
+        this.updateAtmosphereLayers(dt);
     }
 
     private buildScene() {
@@ -137,6 +183,8 @@ export class SceneBuilder extends Component {
 
         const backgroundNode = this.createSpriteNode('BattleBG', backgroundLayer, this.DESIGN_WIDTH, this.DESIGN_HEIGHT);
         this.loadSpriteFrame(backgroundNode.getComponent(Sprite)!, SceneBuilder.BACKGROUND_PATH);
+
+        this.createAtmosphereLayers(backgroundLayer);
 
         const cloudLayer = this.createNode('CloudLayer', backgroundLayer);
         cloudLayer.addComponent(UITransform).setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
@@ -172,6 +220,181 @@ export class SceneBuilder extends Component {
                 phase: index * 1.13,
             });
         });
+    }
+
+    private createAtmosphereLayers(backgroundLayer: Node) {
+        const starNode = this.createGraphicsNode('StarLayer', backgroundLayer);
+        const mistNode = this.createGraphicsNode('MistLayer', backgroundLayer);
+        const flowNode = this.createGraphicsNode('FlowLayer', backgroundLayer);
+
+        this._starGraphics = starNode.getComponent(Graphics);
+        this._mistGraphics = mistNode.getComponent(Graphics);
+        this._flowGraphics = flowNode.getComponent(Graphics);
+
+        this._starStates = this.createStarStates();
+        this._mistStates = this.createMistStates();
+        this._flowStates = this.createFlowStates();
+
+        this.drawStarLayer();
+        this.drawMistLayer();
+        this.drawFlowLayer();
+    }
+
+    private createStarStates(): BackgroundStar[] {
+        const halfWidth = this.DESIGN_WIDTH / 2;
+        const halfHeight = this.DESIGN_HEIGHT / 2;
+
+        return Array.from({ length: SceneBuilder.STAR_COUNT }, () => ({
+            x: this.randomRange(-halfWidth + 24, halfWidth - 24),
+            y: this.randomRange(-halfHeight, halfHeight),
+            radius: this.randomRange(1.2, 3.4),
+            alpha: this.randomRange(0.18, 0.5),
+            twinkle: this.randomRange(0.6, 1.2),
+            phase: this.randomRange(0, Math.PI * 2),
+            speed: this.randomRange(5, 16),
+        }));
+    }
+
+    private createMistStates(): BackgroundMist[] {
+        const halfWidth = this.DESIGN_WIDTH / 2;
+        const halfHeight = this.DESIGN_HEIGHT / 2;
+        const tints = [
+            new Color(162, 205, 255, 24),
+            new Color(194, 175, 255, 20),
+            new Color(150, 240, 255, 18),
+        ];
+
+        return Array.from({ length: SceneBuilder.MIST_COUNT }, (_, index) => ({
+            x: this.randomRange(-halfWidth * 0.28, halfWidth * 0.28),
+            y: this.randomRange(-halfHeight, halfHeight),
+            width: this.randomRange(420, 610),
+            height: this.randomRange(120, 180),
+            alpha: this.randomRange(0.18, 0.3),
+            speed: this.randomRange(10, 20),
+            swayAmplitude: this.randomRange(18, 34),
+            swayFrequency: this.randomRange(0.12, 0.2),
+            phase: index * 1.6,
+            tint: tints[index % tints.length],
+        }));
+    }
+
+    private createFlowStates(): BackgroundFlow[] {
+        const halfWidth = this.DESIGN_WIDTH / 2;
+        const halfHeight = this.DESIGN_HEIGHT / 2;
+
+        return Array.from({ length: SceneBuilder.FLOW_COUNT }, () => ({
+            x: this.randomRange(-halfWidth + 20, halfWidth - 20),
+            y: this.randomRange(-halfHeight, halfHeight),
+            length: this.randomRange(18, 44),
+            width: this.randomRange(1, 2.2),
+            alpha: this.randomRange(0.08, 0.2),
+            speed: this.randomRange(48, 92),
+            swayAmplitude: this.randomRange(6, 18),
+            swayFrequency: this.randomRange(0.35, 0.65),
+            phase: this.randomRange(0, Math.PI * 2),
+        }));
+    }
+
+    private updateAtmosphereLayers(dt: number) {
+        const halfHeight = this.DESIGN_HEIGHT / 2;
+        const wrapPadding = 100;
+        const speedScale = 0.55 + this._cloudSpeedScale * 0.45;
+
+        for (const star of this._starStates) {
+            star.y += star.speed * speedScale * dt;
+            if (star.y > halfHeight + wrapPadding) {
+                star.y = -halfHeight - wrapPadding;
+            }
+        }
+
+        for (const mist of this._mistStates) {
+            mist.y += mist.speed * speedScale * dt;
+            if (mist.y > halfHeight + 180) {
+                mist.y = -halfHeight - 180;
+            }
+        }
+
+        for (const flow of this._flowStates) {
+            flow.y += flow.speed * (0.6 + this._cloudSpeedScale * 0.85) * dt;
+            if (flow.y > halfHeight + 120) {
+                flow.y = -halfHeight - 120;
+            }
+        }
+
+        this.drawStarLayer();
+        this.drawMistLayer();
+        this.drawFlowLayer();
+    }
+
+    private drawStarLayer() {
+        if (!this._starGraphics) {
+            return;
+        }
+
+        const gfx = this._starGraphics;
+        gfx.clear();
+
+        for (const star of this._starStates) {
+            const twinkle = 0.72 + Math.sin(this._cloudElapsed * star.twinkle + star.phase) * 0.28;
+            const outerAlpha = Math.min(255, Math.floor(255 * star.alpha * 0.34 * twinkle));
+            const innerAlpha = Math.min(255, Math.floor(255 * star.alpha * twinkle));
+
+            gfx.fillColor = new Color(180, 228, 255, outerAlpha);
+            gfx.circle(star.x, star.y, star.radius * 2.2);
+            gfx.fill();
+
+            gfx.fillColor = new Color(255, 246, 235, innerAlpha);
+            gfx.circle(star.x, star.y, star.radius);
+            gfx.fill();
+        }
+    }
+
+    private drawMistLayer() {
+        if (!this._mistGraphics) {
+            return;
+        }
+
+        const gfx = this._mistGraphics;
+        gfx.clear();
+
+        for (const mist of this._mistStates) {
+            const x = mist.x + Math.sin(this._cloudElapsed * mist.swayFrequency + mist.phase) * mist.swayAmplitude;
+            const alpha = Math.min(255, Math.floor(255 * mist.alpha));
+            const innerAlpha = Math.min(255, Math.floor(alpha * 0.65));
+            const y = mist.y;
+
+            gfx.fillColor = new Color(mist.tint.r, mist.tint.g, mist.tint.b, alpha);
+            gfx.roundRect(x - mist.width / 2, y - mist.height / 2, mist.width, mist.height, mist.height / 2);
+            gfx.fill();
+
+            gfx.fillColor = new Color(230, 240, 255, innerAlpha);
+            gfx.roundRect(x - mist.width * 0.36, y - mist.height * 0.2, mist.width * 0.72, mist.height * 0.4, mist.height * 0.2);
+            gfx.fill();
+        }
+    }
+
+    private drawFlowLayer() {
+        if (!this._flowGraphics) {
+            return;
+        }
+
+        const gfx = this._flowGraphics;
+        gfx.clear();
+
+        for (const flow of this._flowStates) {
+            const x = flow.x + Math.sin(this._cloudElapsed * flow.swayFrequency + flow.phase) * flow.swayAmplitude;
+            const alpha = Math.min(255, Math.floor(255 * flow.alpha));
+
+            gfx.strokeColor = new Color(208, 245, 255, alpha);
+            gfx.lineWidth = flow.width;
+            gfx.moveTo(x, flow.y - flow.length * 0.5);
+            gfx.lineTo(x, flow.y + flow.length * 0.5);
+            gfx.stroke();
+
+            gfx.fillColor = new Color(255, 255, 255, Math.min(255, Math.floor(alpha * 0.7)));
+            gfx.circle(x, flow.y + flow.length * 0.5, flow.width * 0.7);
+            gfx.fill();
+        }
     }
 
     /**
@@ -345,6 +568,13 @@ export class SceneBuilder extends Component {
         return node;
     }
 
+    private createGraphicsNode(name: string, parent: Node): Node {
+        const node = this.createNode(name, parent);
+        node.addComponent(UITransform).setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
+        node.addComponent(Graphics);
+        return node;
+    }
+
     private createSpriteNode(name: string, parent: Node, width: number, height: number): Node {
         const node = this.createNode(name, parent);
         const uiTransform = node.addComponent(UITransform);
@@ -376,6 +606,10 @@ export class SceneBuilder extends Component {
         this._cloudSpeedScale = SceneBuilder.CLOUD_SPEED_REFERENCE > 0
             ? safeSpeed / SceneBuilder.CLOUD_SPEED_REFERENCE
             : 1;
+    }
+
+    private randomRange(min: number, max: number): number {
+        return min + Math.random() * (max - min);
     }
 
     public getPlayer(): Player | null { return this._player; }

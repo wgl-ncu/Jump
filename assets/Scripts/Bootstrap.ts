@@ -5,6 +5,7 @@ import { GameManager } from './GameManager';
 import { UIFrame } from './UI/UIFrame';
 import { DataManager } from './Data/DataManager';
 import { CocosDataProvider } from './Data/CocosDataProvider';
+import './GrowthUI';
 const { ccclass } = _decorator;
 
 /** 已知场景名 */
@@ -116,6 +117,7 @@ export class Bootstrap extends Component {
         UIFrame.getInstance().registerPrefab('BattleUI', 'Prefabs/UI/BattleUI');
         UIFrame.getInstance().registerPrefab('GameOverUI', 'Prefabs/UI/GameOverUI');
         UIFrame.getInstance().registerPrefab('CommonPopUI', 'Prefabs/UI/CommonPopUI');
+        UIFrame.getInstance().registerPrefab('GrowthUI', 'Prefabs/UI/GrowthUI');
     }
 
     private onSceneLaunched = () => {

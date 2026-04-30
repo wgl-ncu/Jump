@@ -2,7 +2,7 @@
  * 数据提供者抽象接口
  *
  * 将数据加载方式与数据管理器解耦。
- * 不同引擎/运行环境只需实现此接口即可接入 Luban 数据系统。
+ * 不同引擎/运行环境只需实现此接口即可接入项目的二进制配置系统。
  *
  * 使用方式：
  * ```ts
@@ -11,7 +11,7 @@
  *
  * // 自定义环境（如 Node.js 测试）
  * const provider: IDataProvider = {
- *     loadFileNames: () => cfg.Tables.getTableNames(),
+ *     loadFileNames: () => Tables.getTableNames(),
  *     loadBinary: (fileName) => fs.readFileSync(`data/${fileName}.bin`),
  * };
  * ```
@@ -22,7 +22,7 @@ import ByteBuf from './luban/ByteBuf';
 export interface IDataProvider {
     /**
      * 获取所有需要加载的配置文件名列表
-     * 通常来自 Luban 生成的 Tables.getTableNames()
+    * 通常来自生成后的 Tables.getTableNames()
      */
     loadFileNames(): string[];
 

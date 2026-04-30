@@ -1,11 +1,16 @@
 import { _decorator, Component, director } from 'cc';
 import { Player, MagneticPole } from './Player';
 import { Obstacle, ObstacleCharge } from './Obstacle';
+import { AdManager } from './Ad';
 import { Coin } from './Coin';
+import { CommonPopUI, CommonPopUILayout } from './CommonPopUI';
 import { InvincibleItem } from './InvincibleItem';
 import { DashItem } from './DashItem';
 import { BonusPortalItem } from './BonusPortalItem';
+import { GrowthManager } from './GrowthManager';
 import { ObstacleSpawner } from './ObstacleSpawner';
+import { ItemManager, MetaItemId } from './ItemManager';
+import { PowerPopupHelper } from './PowerPopupHelper';
 import { PowerManager } from './PowerManager';
 import { UIManager } from './UIManager';
 import { UIFrame } from './UI/UIFrame';
@@ -33,6 +38,10 @@ enum GameState {
  */
 @ccclass('GameManager')
 export class GameManager extends Component {
+    private static readonly RAPID_DASH_DURATION = 8;
+    private static readonly RAPID_DASH_SPEED_SCALE = 2;
+    private static readonly RUN_GOLD_REWARDED_AD_KEYS = ['power', 'revive'];
+
 
     @property({ type: Player, tooltip: '玩家组件' })
     public player: Player | null = null;
@@ -65,6 +74,9 @@ export class GameManager extends Component {
     /** 当前分数 */
     private _score: number = 0;
 
+    /** 本局通过金币拾取获得的金币基数 */
+    private _runCoinScore: number = 0;
+
     /** 场景构建器引用 */
     private _sceneBuilder: SceneBuilder | null = null;
 
@@ -84,7 +96,7 @@ export class GameManager extends Component {
     private _bonusRoomTimer: number = 0;
 
     /** 奖励房间持续时间（秒） */
-    private readonly BONUS_ROOM_DURATION: number = 10;
+    private _bonusRoomDuration: number = 10;
 
     /** 退出奖励房间后的缓冲无敌时间（秒） */
     private readonly BONUS_ROOM_BUFFER_INVINCIBLE: number = 2;
@@ -151,7 +163,7 @@ export class GameManager extends Component {
             this.uiManager.onStartClicked = () => this.startGame();
             this.uiManager.onRestartClicked = () => {
                 if (!PowerManager.getInstance().tryConsumeForGame()) {
-                    UIFrame.getInstance().toast('体力不足，至少需要 5 点');
+                    PowerPopupHelper.showInsufficientPowerPopup();
                     return;
                 }
 
@@ -168,12 +180,15 @@ export class GameManager extends Component {
     private startGame() {
         this._state = GameState.Playing;
         this._score = 0;
+        this._runCoinScore = 0;
         this._scoredGroups.clear();
         this._isInBonusRoom = false;
         this._bonusRoomTimer = 0;
+        ItemManager.getInstance().startRun();
 
         if (this.player) {
             this.player.reset();
+            this.applyGrowthToPlayer();
             this.player.setBounds(this.leftBound, this.rightBound);
             this.player.onHurt = () => {
                 this.uiManager?.updateLives(this.player!.lives);
@@ -186,9 +201,9 @@ export class GameManager extends Component {
                 }
                 this.obstacleSpawner?.setPlayerPowerupInvincible(active);
             };
-            this.player.onPowerupDash = (active: boolean) => {
+            this.player.onPowerupDash = (active: boolean, duration: number, speedScale: number) => {
                 if (active) {
-                    this.uiManager?.updateDashStatus(true, this.player!.POWERUP_DASH_DURATION);
+                    this.uiManager?.updateDashStatus(true, duration);
                 } else {
                     this.uiManager?.updateDashStatus(false);
                     // 冲刺结束时弹飞视野内所有障碍物，给予缓冲时间
@@ -197,11 +212,12 @@ export class GameManager extends Component {
                         this.obstacleSpawner.knockbackAllVisibleObstacles(playerPos.x, playerPos.y);
                     }
                 }
-                this.obstacleSpawner?.setPlayerPowerupDash(active);
+                this.obstacleSpawner?.setPlayerPowerupDash(active, speedScale);
             };
         }
 
         if (this.obstacleSpawner) {
+            this.obstacleSpawner.setPlayerPowerupDash(false);
             this.obstacleSpawner.startSpawning();
             this.obstacleSpawner.setScore(0);
         }
@@ -215,6 +231,8 @@ export class GameManager extends Component {
         this.uiManager?.reset();
         this.uiManager?.updateLives(this.player ? this.player.lives : Player.prototype.MAX_LIVES);
         this.uiManager?.updatePoleIndicator(MagneticPole.N);
+
+        this.tryActivateRapidDash();
     }
 
     private restartGame() {
@@ -234,6 +252,117 @@ export class GameManager extends Component {
         this.obstacleSpawner?.stopSpawning();
         this.magneticZoneManager?.stopZones();
         this.uiManager?.showGameOverPanel();
+
+        const runGoldScaled = GrowthManager.getInstance().settleRunGold(this._runCoinScore);
+        if (runGoldScaled > 0) {
+            this.showRunGoldPopup(runGoldScaled);
+        }
+    }
+
+    private applyGrowthToPlayer() {
+        if (!this.player) {
+            return;
+        }
+
+        const growthManager = GrowthManager.getInstance();
+        this.player.configureGrowthValues(
+            growthManager.getScaledValueByKey('pickup_radius') / 10,
+            growthManager.getScaledValueByKey('dash_duration') / 10,
+            growthManager.getScaledValueByKey('invincible_duration') / 10,
+        );
+        this._bonusRoomDuration = growthManager.getScaledValueByKey('bonus_room_duration') / 10;
+    }
+
+    private tryActivateGuardianWing(): boolean {
+        if (!this.player) {
+            return false;
+        }
+
+        if (!ItemManager.getInstance().tryConsumeForCurrentRun(MetaItemId.GuardianWing)) {
+            return false;
+        }
+
+        this.player.restoreFullLives();
+        this.player.activatePowerupDash(this.player.POWERUP_DASH_DURATION);
+        this.uiManager?.updateLives(this.player.lives);
+        UIFrame.getInstance().toast('守护之翼生效：已满血复活并进入冲刺');
+        return true;
+    }
+
+    private tryActivateRapidDash(): boolean {
+        if (!this.player || !this.obstacleSpawner) {
+            return false;
+        }
+
+        if (!ItemManager.getInstance().tryConsumeForCurrentRun(MetaItemId.RapidDash)) {
+            return false;
+        }
+
+        const rapidDashDuration = GrowthManager.getInstance().getScaledValueByKey('rapid_dash_duration') / 10 || GameManager.RAPID_DASH_DURATION;
+        this.player.activatePowerupDash(rapidDashDuration, GameManager.RAPID_DASH_SPEED_SCALE);
+        UIFrame.getInstance().toast('急速冲刺生效：开局进入强化冲刺');
+        return true;
+    }
+
+    private showRunGoldPopup(runGoldScaled: number) {
+        const growthManager = GrowthManager.getInstance();
+        const rewardedAdKey = this.resolveRunGoldRewardedAdKey();
+        const runGoldText = GrowthManager.formatScaledValue(runGoldScaled);
+        const header = runGoldScaled >= growthManager.getDoubleAdStrongThreshold()
+            ? '本局高收益！'
+            : (runGoldScaled >= growthManager.getDoubleAdNormalThreshold() ? '本局金币不错' : '本局获得金币');
+
+        CommonPopUI.show({
+            layout: CommonPopUILayout.Text,
+            text: `${header}\n金币 +${runGoldText}\n当前金币 ${growthManager.getGoldText()}${rewardedAdKey ? `\n观看广告可再得 ${runGoldText}` : ''}`,
+            buttons: rewardedAdKey
+                ? [
+                    {
+                        text: `双倍领取 +${runGoldText}`,
+                        onClick: () => {
+                            void this.handleRunGoldDoubleReward(rewardedAdKey, runGoldScaled);
+                        },
+                    },
+                    {
+                        text: '关闭',
+                    },
+                ]
+                : [
+                    {
+                        text: '关闭',
+                    },
+                ],
+        });
+    }
+
+    private resolveRunGoldRewardedAdKey(): string | null {
+        const adManager = AdManager.getInstance();
+        if (!adManager.isInitialized) {
+            return null;
+        }
+
+        for (const key of GameManager.RUN_GOLD_REWARDED_AD_KEYS) {
+            if (adManager.getRewardedVideoAd(key)) {
+                return key;
+            }
+        }
+
+        return null;
+    }
+
+    private async handleRunGoldDoubleReward(rewardedAdKey: string, runGoldScaled: number): Promise<void> {
+        const watched = await AdManager.getInstance().showRewardedVideo(rewardedAdKey);
+        if (!this.node.isValid) {
+            return;
+        }
+
+        if (!watched) {
+            UIFrame.getInstance().toast('广告未完整观看，未额外获得金币');
+            return;
+        }
+
+        GrowthManager.getInstance().claimDoubleReward(runGoldScaled);
+        UIFrame.getInstance().toast(`额外金币 +${GrowthManager.formatScaledValue(runGoldScaled)}`);
     }
 
     update(_dt: number) {
@@ -394,6 +523,10 @@ export class GameManager extends Component {
                     this.uiManager?.updateScore(this._score);
                 } else {
                     // 正常碰撞：受伤
+                    if (this.player!.lives <= 1 && this.tryActivateGuardianWing()) {
+                        return;
+                    }
+
                     const alive = this.player!.takeDamage();
                     this.uiManager?.updateLives(this.player!.lives);
                     if (!alive) {
@@ -447,6 +580,7 @@ export class GameManager extends Component {
                 if (dy < verticalRange + coin.getCollisionRadius()) {
                     coin.collect();
                     this._score += coin.value;
+                    this._runCoinScore += coin.value;
                     this.uiManager?.updateScore(this._score);
                 }
             } else {
@@ -457,6 +591,7 @@ export class GameManager extends Component {
                 if (dist < collectRadius + coin.getCollisionRadius()) {
                     coin.collect();
                     this._score += coin.value;
+                    this._runCoinScore += coin.value;
                     this.uiManager?.updateScore(this._score);
                 }
             }
@@ -490,7 +625,7 @@ export class GameManager extends Component {
                 const dy = Math.abs(playerPos.y - itemPos.y);
                 if (dy < verticalRange + item.getCollisionRadius()) {
                     item.collect();
-                    this.player!.activatePowerupInvincible(item.duration);
+                    this.player!.activatePowerupInvincible(this.player!.POWERUP_INVINCIBLE_DURATION);
                 }
             } else {
                 const dx = playerPos.x - itemPos.x;
@@ -499,7 +634,7 @@ export class GameManager extends Component {
 
                 if (dist < collectRadius + item.getCollisionRadius()) {
                     item.collect();
-                    this.player!.activatePowerupInvincible(item.duration);
+                    this.player!.activatePowerupInvincible(this.player!.POWERUP_INVINCIBLE_DURATION);
                 }
             }
         }
@@ -532,7 +667,7 @@ export class GameManager extends Component {
                 const dy = Math.abs(playerPos.y - itemPos.y);
                 if (dy < verticalRange + item.getCollisionRadius()) {
                     item.collect();
-                    this.player!.activatePowerupDash(item.duration);
+                    this.player!.activatePowerupDash(this.player!.POWERUP_DASH_DURATION);
                 }
             } else {
                 const dx = playerPos.x - itemPos.x;
@@ -541,7 +676,7 @@ export class GameManager extends Component {
 
                 if (dist < collectRadius + item.getCollisionRadius()) {
                     item.collect();
-                    this.player!.activatePowerupDash(item.duration);
+                    this.player!.activatePowerupDash(this.player!.POWERUP_DASH_DURATION);
                 }
             }
         }
@@ -592,7 +727,7 @@ export class GameManager extends Component {
      */
     private enterBonusRoom() {
         this._isInBonusRoom = true;
-        this._bonusRoomTimer = this.BONUS_ROOM_DURATION;
+        this._bonusRoomTimer = this._bonusRoomDuration;
 
         // 通知玩家进入奖励房间
         if (this.player) {
@@ -603,7 +738,7 @@ export class GameManager extends Component {
         this.obstacleSpawner?.enterBonusRoom();
 
         // 显示奖励房间UI
-        this.uiManager?.updateBonusRoomStatus(true, this.BONUS_ROOM_DURATION);
+        this.uiManager?.updateBonusRoomStatus(true, this._bonusRoomDuration);
     }
 
     /**

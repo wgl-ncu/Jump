@@ -1,8 +1,8 @@
 /**
- * Luban 运行时 - ByteBuf
+ * 二进制配置读取器 - ByteBuf
  *
  * 纯浏览器兼容实现，不依赖 Node.js Buffer。
- * 使用 DataView + Uint8Array 读取 Luban 生成的二进制配置数据。
+ * 使用 DataView + Uint8Array 读取项目构建出的二进制配置数据。
  */
 
 /* MIN_CAPACITY unused - kept for reference: 16 */

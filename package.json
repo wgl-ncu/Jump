@@ -4,7 +4,7 @@
   "creator": {
     "version": "3.8.8"
   },
-  "devDependencies": {
-    "exceljs": "^4.4.0"
+  "scripts": {
+    "build:config": "node Tools/config/build-config.js"
   }
 }

@@ -125,6 +125,9 @@ export class ObstacleSpawner extends Component {
     /** 玩家是否处于道具冲刺状态（由GameManager同步） */
     private _playerPowerupDash: boolean = false;
 
+    /** 当前道具冲刺速度系数（相对普通冲刺） */
+    private _playerPowerupDashScale: number = 1;
+
     /** ========= 神秘奖励入口 ========= */
 
     /** 所有活跃奖励入口道具 */
@@ -159,6 +162,10 @@ export class ObstacleSpawner extends Component {
 
     /** 冲刺速度倍率 */
     private readonly DASH_SPEED_MULT: number = 1.8;
+
+    public get powerupDashSpeedMultiplier(): number {
+        return this.DASH_SPEED_MULT;
+    }
 
     /** 当前冲刺速度倍率（1=正常, 1.8=冲刺中） */
     private _dashSpeedMult: number = 1;
@@ -664,18 +671,25 @@ export class ObstacleSpawner extends Component {
         this._playerPowerupInvincible = active;
     }
 
-    public setPlayerPowerupDash(active: boolean) {
-        if (this._playerPowerupDash === active) return;
-        this._playerPowerupDash = active;
+    public setPlayerPowerupDash(active: boolean, speedScale: number = 1) {
+        const nextScale = active ? Math.max(1, speedScale) : 1;
+        const previousDashMult = this._playerPowerupDash
+            ? this.DASH_SPEED_MULT * this._playerPowerupDashScale
+            : 1;
+        const nextDashMult = active
+            ? this.DASH_SPEED_MULT * nextScale
+            : 1;
 
-        if (active) {
-            this._dashSpeedMult = this.DASH_SPEED_MULT;
-            // 加速所有活跃物体
-            this.applySpeedMultiplier(this.DASH_SPEED_MULT);
-        } else {
-            this._dashSpeedMult = 1;
-            // 恢复所有活跃物体速度
-            this.applySpeedMultiplier(1 / this.DASH_SPEED_MULT);
+        if (this._playerPowerupDash === active && this._playerPowerupDashScale === nextScale) {
+            return;
+        }
+
+        this._playerPowerupDash = active;
+        this._playerPowerupDashScale = nextScale;
+        this._dashSpeedMult = nextDashMult;
+
+        if (previousDashMult !== nextDashMult) {
+            this.applySpeedMultiplier(nextDashMult / previousDashMult);
         }
     }
 

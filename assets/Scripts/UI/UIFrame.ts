@@ -133,9 +133,10 @@ export class UIFrame extends Component {
             const node = new Node(layerNames[layer]);
             node.setParent(this._rootNode);
             node.addComponent(UITransform).setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
-            node.setSiblingIndex(layer);
             this._layers.set(layer, node);
         }
+
+        this.ensureLayerOrder();
 
         log('[UIFrame] 初始化完成');
     }
@@ -144,7 +145,32 @@ export class UIFrame extends Component {
     public ensureInit(): void {
         if (!this._rootNode) {
             this.init();
+            return;
         }
+
+        this.ensureLayerOrder();
+    }
+
+    private ensureLayerOrder(): void {
+        if (!this._rootNode) {
+            return;
+        }
+
+        const orderedLayers: UILayer[] = [
+            UILayer.Background,
+            UILayer.Scene,
+            UILayer.HUD,
+            UILayer.Panel,
+            UILayer.Popup,
+            UILayer.Toast,
+        ];
+
+        orderedLayers.forEach((layer, index) => {
+            const node = this._layers.get(layer);
+            if (node?.isValid) {
+                node.setSiblingIndex(index);
+            }
+        });
     }
 
     // ==================== 层级管理 ====================
@@ -156,6 +182,7 @@ export class UIFrame extends Component {
 
     /** 将节点添加到指定层级 */
     public addToLayer(node: Node, layer: UILayer) {
+        this.ensureLayerOrder();
         const layerNode = this._layers.get(layer);
         if (layerNode) {
             node.setParent(layerNode);
@@ -182,6 +209,7 @@ export class UIFrame extends Component {
      */
     public open(panelPath: string, options: UIPanelOptions = {}): void {
         this.ensureInit();
+        this.ensureLayerOrder();
 
         const { cache = true, modal = false, maskAlpha = 160, data = null, onOpened, onClosed } = options;
 
@@ -366,8 +394,13 @@ export class UIFrame extends Component {
         const node = new Node(panelPath);
         const ut = node.addComponent(UITransform);
         ut.setContentSize(new Size(this.DESIGN_WIDTH, this.DESIGN_HEIGHT));
-        // 添加 UIPanel 基类组件
-        node.addComponent('UIPanel');
+
+        // 优先挂载同名面板脚本，便于使用纯代码构建的 UI。
+        const panelComp = node.getComponent(panelPath) || node.addComponent(panelPath);
+        if (!panelComp) {
+            node.addComponent('UIPanel');
+        }
+
         return node;
     }
 
@@ -393,6 +426,7 @@ export class UIFrame extends Component {
      * @param duration 显示时长（秒），默认 2
      */
     public toast(message: string, duration: number = 2): void {
+        this.ensureLayerOrder();
         const toastLayer = this._layers.get(UILayer.Toast);
         if (!toastLayer) return;
 

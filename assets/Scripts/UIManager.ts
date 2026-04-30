@@ -175,7 +175,7 @@ export class UIManager extends Component {
         }
 
         frame.open('GameOverUI', {
-            cache: true,
+            cache: false,
             onOpened: () => {
                 const panelNode = frame.getPanelNode('GameOverUI');
                 const panel = panelNode?.getComponent(GameOverUI) || null;
@@ -590,9 +590,7 @@ export class UIManager extends Component {
         this.unschedule(this.unlockGameOverInput);
         this._gameOverInputLocked = false;
 
-        if (this.gameOverPanel?.active) {
-            UIFrame.getInstance().closePanel('GameOverUI');
-        }
+        UIFrame.getInstance().closePanel('GameOverUI');
 
         this.setPanelVisible(this.gameOverPanel, false);
     }

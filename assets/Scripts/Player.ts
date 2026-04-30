@@ -55,7 +55,10 @@ export class Player extends Component {
     private _radius: number = 22;
 
     /** 拾取半径（用于金币/道具拾取，比碰撞半径大） */
-    private _collectRadius: number = 60;
+    private _collectRadius: number = 80;
+
+    /** 成长系统配置后的基础拾取半径 */
+    private _baseCollectRadius: number = 80;
 
     /** 切换磁极回调 */
     public onPoleChanged: ((pole: MagneticPole) => void) | null = null;
@@ -85,7 +88,10 @@ export class Player extends Component {
     private readonly INVINCIBLE_DURATION: number = 1.5;
 
     /** 道具无敌持续时间（秒） */
-    public readonly POWERUP_INVINCIBLE_DURATION: number = 10;
+    private _powerupInvincibleDuration: number = 10;
+    public get POWERUP_INVINCIBLE_DURATION(): number {
+        return this._powerupInvincibleDuration;
+    }
 
     /** 无敌计时器 */
     private _invincibleTimer: number = 0;
@@ -126,7 +132,10 @@ export class Player extends Component {
     }
 
     /** 道具冲刺持续时间（秒） */
-    public readonly POWERUP_DASH_DURATION: number = 5;
+    private _powerupDashDuration: number = 5;
+    public get POWERUP_DASH_DURATION(): number {
+        return this._powerupDashDuration;
+    }
 
     /** 道具冲刺剩余时间 */
     private _powerupDashTimer: number = 0;
@@ -134,11 +143,17 @@ export class Player extends Component {
         return this._powerupDashTimer;
     }
 
+    /** 道具冲刺速度倍率系数（相对普通冲刺道具） */
+    private _powerupDashSpeedScale: number = 1;
+    public get powerupDashSpeedScale(): number {
+        return this._powerupDashSpeedScale;
+    }
+
     /** 道具冲刺自动拾取垂直范围（一个身位 = 直径） */
     public readonly POWERUP_DASH_COLLECT_VERTICAL_RANGE: number = 44;
 
     /** 道具冲刺回调 */
-    public onPowerupDash: ((active: boolean) => void) | null = null;
+    public onPowerupDash: ((active: boolean, duration: number, speedScale: number) => void) | null = null;
 
     /** 视觉组件引用 */
     private _gfx: Graphics | null = null;
@@ -154,7 +169,7 @@ export class Player extends Component {
     private readonly BONUS_ROOM_COLLECT_RADIUS: number = 120;
 
     /** 正常拾取半径（保存以便恢复） */
-    private _normalCollectRadius: number = 60;
+    private _normalCollectRadius: number = 80;
 
     /** N极动画片段名称 */
     @property({ tooltip: 'N极动画片段名称' })
@@ -236,6 +251,14 @@ export class Player extends Component {
 
     public getCollectRadius(): number {
         return this._collectRadius;
+    }
+
+    public configureGrowthValues(collectRadius: number, dashDuration: number, invincibleDuration: number) {
+        this._baseCollectRadius = Math.max(20, collectRadius);
+        this._normalCollectRadius = this._baseCollectRadius;
+        this._collectRadius = this._baseCollectRadius;
+        this._powerupDashDuration = Math.max(0.5, dashDuration);
+        this._powerupInvincibleDuration = Math.max(0.5, invincibleDuration);
     }
 
     /**
@@ -769,8 +792,9 @@ export class Player extends Component {
             if (this._powerupDashTimer <= 0) {
                 this._isPowerupDash = false;
                 this._powerupDashTimer = 0;
+                this._powerupDashSpeedScale = 1;
                 this._dashMultiplier = this._dashTimer > 0 ? this.DASH_SPEED_MULT : 1;
-                this.onPowerupDash?.(false);
+                this.onPowerupDash?.(false, 0, 1);
                 this.drawPlayerGfx();
             } else {
                 this.drawPlayerGfx();
@@ -849,12 +873,18 @@ export class Player extends Component {
     /**
      * 激活道具冲刺（5秒）
      */
-    public activatePowerupDash(duration: number = 5) {
+    public activatePowerupDash(duration: number = 5, speedScale: number = 1) {
         this._isPowerupDash = true;
         this._powerupDashTimer = duration;
+        this._powerupDashSpeedScale = Math.max(1, speedScale);
         // 冲刺时无视磁力，不设置 _dashMultiplier（由 ObstacleSpawner 处理滚动加速）
-        this.onPowerupDash?.(true);
+        this.onPowerupDash?.(true, duration, this._powerupDashSpeedScale);
         this.drawPlayerGfx();
+    }
+
+    public restoreFullLives() {
+        this._isAlive = true;
+        this._lives = this.MAX_LIVES;
     }
 
     /**
@@ -909,8 +939,10 @@ export class Player extends Component {
         this._isPowerupInvincible = false;
         this._isPowerupDash = false;
         this._powerupDashTimer = 0;
+        this._powerupDashSpeedScale = 1;
         this._isInBonusRoom = false;
-        this._collectRadius = 80; // 恢复默认
+        this._normalCollectRadius = this._baseCollectRadius;
+        this._collectRadius = this._baseCollectRadius;
         this._currentPole = MagneticPole.N;
         this._velocityX = 0;
         this._reversalFactor = 0;

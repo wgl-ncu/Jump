@@ -2,7 +2,7 @@
  * 数据管理器
  *
  * 核心职责：
- * 1. 隐藏 Luban 加载细节，业务层只需访问 DataManager.getInstance().tables
+ * 1. 隐藏配置加载细节，业务层只需访问 DataManager.getInstance().tables
  * 2. 通过 IDataProvider 抽象数据加载方式，适配不同运行环境
  * 3. 提供异步加载 API，支持加载进度回调
  * 4. 加载完成后自动初始化 TextManager
@@ -32,7 +32,7 @@ export type LoadProgressCallback = (loaded: number, total: number, fileName: str
 export class DataManager {
     private static _instance: DataManager | null = null;
 
-    /** Luban 生成的 Tables 实例，加载完成后可用 */
+    /** 生成的 Tables 实例，加载完成后可用 */
     private _tables: any = null;
 
     /** 是否已完成加载 */

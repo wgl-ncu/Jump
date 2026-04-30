@@ -3,7 +3,7 @@
  *
  * 核心职责：
  * 1. 管理本地化文本的读取与语言切换
- * 2. 隐藏 Luban TbText 表的字段映射细节，业务层只需传入 ID
+ * 2. 隐藏 TbText 表的字段映射细节，业务层只需传入 ID
  * 3. 支持 TextId 枚举，避免魔法数字
  * 4. 支持带占位符 {0} {1} ... 的格式化文本
  * 5. 自动将 \n 转义序列转换为实际换行
@@ -43,7 +43,7 @@ const LANG_FIELD_MAP: Record<Language, keyof text.Text> = {
 export class TextManager {
     private static _instance: TextManager | null = null;
 
-    /** Luban TbText 表实例 */
+    /** TbText 表实例 */
     private _tbText: text.TbText | null = null;
 
     /** 当前语言 */
@@ -79,7 +79,7 @@ export class TextManager {
     /**
      * 初始化文本管理器（由 DataManager.load 内部调用）
      *
-     * @param tbText Luban TbText 表实例
+     * @param tbText TbText 表实例
      */
     init(tbText: text.TbText): void {
         this._tbText = tbText;
